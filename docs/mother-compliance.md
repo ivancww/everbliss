@@ -12,7 +12,7 @@
 - Pages use App Header → Page Control where applicable → adaptive Main Presentation Card → app-specific interactions. The user-facing journey is not a cloned Medical flow.
 - Frontstage is the primary customer experience. `?avaEntry=frontend` opens it. `?avaEntry=user` edits the same Frontstage and supports Preview, Save Local, and reset of allowed hero copy. User overrides are separate from protected product and Government data.
 - `?avaEntry=admin` cannot authorize access. `admin:false`; the route gives a safe message and no Admin UI or write connector exists.
-- Product Official proposal records and Government data are immutable module inputs. Derived premium-scaled outputs retain a derived source label. Missing age anchors remain unavailable.
+- Product Official proposal records and Government data are immutable module inputs. Derived premium-scaled and interpolated income outputs retain explicit source labels and bracketing-age metadata. Unsupported ages/combinations remain unavailable; income anchors do not create death/cash-value data.
 - Journey, User override, FX entry, and OALA inputs are Local-first. IndexedDB is primary; namespaced LocalStorage is a fallback. No source documents or customer PDFs are stored.
 - Return to AVA points to the current Platform production destination, preserving `avaSurface=user/admin` context when present.
 - Version is independent from AVA Platform. The Pages workflow stamps deployment SHA into `release.json` and the generated Service Worker; cache namespace is fixed and per-deployment cache instances retire safely.

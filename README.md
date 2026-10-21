@@ -37,16 +37,17 @@ The GitHub Pages workflow builds the static shell and stamps its immutable commi
 ## Data sources and calculated values
 
 - Official product timing, benefits, and service qualifications use AIA's official EverBliss product material.
-- Four age-50 / US$25,000 proposal anchors were provided in the product-owner build request. The proposal file identifiers were not attached, so the records preserve a pending source-document reference.
+- Verified US$25,000 annual income anchors for ages 50, 52, 55, 57, 60, 65, 67, and 70 where supplied are recorded as Official inputs. Original proposal PDFs/reference IDs were not attached; the metadata preserves that provenance limitation.
 - Premium-scaled results are labeled `SCALED_FROM_OFFICIAL`; they are not presented as official proposal quotations.
-- No interpolation is performed because the repository currently has only one age anchor per gender and accumulation option. Missing ages remain unavailable.
+- Missing income ages are linearly interpolated only between surrounding anchors for the same gender and accumulation mode. Results are explicitly marked `INTERPOLATED`; no extrapolation is performed. Unsupported combinations remain unavailable.
+- Exact Year-10 death/cash-value data are only available for the age-50 anchors. Income interpolation does not infer death benefit, cash value, terminal bonus, or surrender values.
 - The HKD/USD exchange rate is user-entered; no rate is embedded.
 - OALA values are from official SWD pages and stored with an effective date, verification date, treatment metadata, and source URLs.
 - Product Official records, Government records, and User presentation overrides are separate layers. No raw documents are stored.
 
 ## Non-guaranteed income
 
-The main result uses one Year-8-and-later expected monthly cashflow headline. It discloses that non-guaranteed amounts may be higher, lower, or zero, and separately shows guaranteed and potential non-guaranteed components on expansion. Immediate guaranteed income starts in month 1; five-year deferred guaranteed income starts in month 61; non-guaranteed income starts in month 85.
+The main result leads with the first guaranteed income phase: current monthly income for immediate mode, or Year-6 monthly income for deferred mode. The Year-8-and-later expected monthly total is secondary. HKD is shown using the user-entered HKD/USD rate with USD detail and an FX caveat. Non-guaranteed amounts may be higher, lower, or zero. Immediate guaranteed income starts in month 1; five-year deferred guaranteed income starts in month 61; non-guaranteed income starts in month 85.
 
 ## User and future Admin architecture
 

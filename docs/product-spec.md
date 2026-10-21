@@ -12,9 +12,9 @@ EverBliss helps a customer understand how part of retirement assets might be con
 - Existing retirement benefits are treated as monthly income only when the customer has already structured them as a stable recurring payment.
 - The customer chooses an amount to retain as liquidity before any amount is considered for long-term income.
 - Start now means guaranteed income begins at policy month 1. Five-year deferred means guaranteed income begins at policy month 61. Potential non-guaranteed income begins at month 85 in either mode.
-- A single headline shows the Year-8-and-later expected monthly total. Year 1–7 displays guaranteed income only when it has started; deferred years 1–5 display no income.
+- The primary result shows the first actual income phase: current guaranteed monthly income for immediate mode, or Year 6 guaranteed income for deferred mode. The Year-8-and-later expected total is secondary. HKD is shown using the entered rate with USD detail and an FX caveat.
 - Non-guaranteed income is separately disclosed and may be higher, lower, or zero.
-- This release contains official proposal anchors only for age 50. Other ages remain unavailable until source-backed anchors are added. No age interpolation is used without verified nearby anchors.
+- Exact supplied income anchors are used at supported ages; intermediate ages are linearly interpolated only between same-gender, same-mode official income anchors. These values are visibly distinguished from Official quotes. Ages/combinations outside bracketing anchors remain unavailable. Only age-50 anchors currently include Year-10 death/cash-value data.
 - Premiums above US$25,000 are marked `SCALED_FROM_OFFICIAL`, not as direct proposal values.
 - Customer input is HKD. No HKD/USD rate is embedded; the customer must enter a rate for conversion.
 
@@ -25,7 +25,7 @@ The feature hub is separate from the cashflow journey.
 1. **F01 健康額外收入:** qualifying Alzheimer's disease / irreversible organic degenerative brain disorders or Parkinson's disease on/after the fifth policy anniversary; additional income is 50% of guaranteed monthly income for up to 120 months, subject to terms.
 2. **F02 靈活／照顧安排:** Income Transfer Option can direct monthly income to a designated recipient for an approved period starting from the fifth anniversary. Advance Income Benefit can advance eligible guaranteed income under events and limits in AIA's current product material.
 3. **F03 身故／家庭安排:** shows cumulative income and a Year-10 death-benefit example. Technical components are expandable. Terminal bonus is non-guaranteed.
-4. **F04 增值服務:** RetireSmart Health Service is identified as a non-contractual, non-guaranteed service. AIA may amend, suspend, or terminate it and may change service terms.
+4. **F04 增值服務:** RetireSmart Health Service is identified as a non-contractual, non-guaranteed service. The page summarizes verified service groups, eligibility tiers, third-party provider and possible direct fees, geographic limitations, and AIA's right to amend, suspend, or terminate service or terms.
 
 ## External support: Old Age Living Allowance
 

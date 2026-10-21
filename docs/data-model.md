@@ -17,7 +17,7 @@ User overrides cannot mutate Official records, calculation logic, protected prod
 
 ## Product data provenance fields
 
-The EverBliss anchor records include product, gender, issue age, accumulation mode, single premium, policy year, source type, source reference, verified date, and notes. The four 50-year-old US$25,000 proposal values were supplied in the product-owner task and marked `OFFICIAL`; the exact source PDF/reference identifier is explicitly pending because the files were not attached to the repository. Results distinguish `OFFICIAL` anchors, `SCALED_FROM_OFFICIAL` premium-scaling scenarios, `INTERPOLATED` values (not currently produced), and `CALCULATED` outputs.
+The EverBliss anchor records include product, gender, issue age, accumulation mode, single premium, source type, source reference, and policy-year values where supplied. The correction request supplied a verified US$25,000 annual income schedule for ages 50, 52, 55, 57, 60, 65, 67, and 70 for applicable gender/mode combinations. Original proposal PDFs/reference IDs remain unattached and are disclosed in metadata. Exact age values are `OFFICIAL`; bracketed income values are `INTERPOLATED` with the two source ages retained. Premium scaling is separately tagged `SCALED_FROM_OFFICIAL`. Unsupported combinations fail closed. Year-10 cash value, terminal bonus, surrender, and death values remain available only for the exact age-50 anchors that include those fields; income interpolation cannot produce them.
 
 ## OALA source metadata
 

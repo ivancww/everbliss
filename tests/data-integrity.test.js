@@ -19,12 +19,14 @@ test("source types distinguish owner-provided Official data and premium-scaled o
   const record=officialAnchors["50|F|immediate"];
   assert.equal(record.issueAge,50);assert.equal(record.singlePremium,25000);assert.equal(record.accumulation,"immediate");
   const source=fs.readFileSync(path.join(root,"src/data/official/everbliss-anchors.js"),"utf8");
-  assert.match(source,/sourceType: "OFFICIAL"/);assert.match(source,/verifiedDate: null/);assert.match(source,/REFERENCE_PENDING/);
+  assert.match(source,/sourceType: "OFFICIAL"/);assert.match(source,/verifiedDate: null/);assert.match(source,/OWNER_SUPPLIED_VERIFIED_INPUT/);
   assert.deepEqual(dataSourceTypes,["OFFICIAL","SCALED_FROM_OFFICIAL","INTERPOLATED","CALCULATED"]);
 });
-test("age interpolation is not silently fabricated when an Official anchor is missing",()=>{
-  const source=fs.readFileSync(path.join(root,"src/calculations/engine.js"),"utf8");
-  assert.match(source,/NO_OFFICIAL_AGE_ANCHOR/);assert.doesNotMatch(source,/interpolat\w*\s*\(/i);
+test("interpolated income identifies its Official surrounding anchors and does not extrapolate",async()=>{
+  const {getAnchor,calculateEverBliss}=await import("../src/calculations/engine.js");
+  const r=getAnchor({issueAge:56,gender:"M",accumulation:"immediate"});assert.equal(r.sourceType,"INTERPOLATED");assert.deepEqual(r.sourceAges,[55,57]);
+  assert.equal(getAnchor({issueAge:67,gender:"F",accumulation:"immediate"}),null);
+  assert.equal(calculateEverBliss({issueAge:71,gender:"M",accumulation:"immediate",premiumUsd:25000}).available,false);
 });
 test("Government data carries current effective date and official source metadata",()=>{
   assert.equal(oalaData.effectiveDate,"2026-02-01");assert.equal(oalaData.verifiedDate,"2026-10-21");
@@ -41,6 +43,21 @@ test("capabilities fail closed for Admin while Front and User are declared",()=>
 test("feature hub and Return to AVA remain part of the shell",()=>{
   const html=fs.readFileSync(path.join(root,"index.html"),"utf8");const appSource=fs.readFileSync(path.join(root,"src/app/main.js"),"utf8");
   assert.match(html,/id="return-ava"/);assert.match(html,/https:\/\/ivancww\.github\.io\/avaplatform\//);assert.match(html,/返回 AVA/);assert.match(appSource,/計劃特點/);
+});
+test("OALA page uses conditional rule framing and keeps asset and income results separate",()=>{
+  const source=fs.readFileSync(path.join(root,"src/app/main.js"),"utf8");
+  assert.match(source,/只按社署目前公開的市場年金處理原則作初步估算/);assert.match(source,/最終由社會福利署按當時政策審批/);
+  assert.match(source,/資產審查/);assert.match(source,/入息審查/);assert.doesNotMatch(source,/政府已確認合資格/);
+});
+test("RetireSmart is identified as non-contractual with verified provider and fee caveats",()=>{
+  const source=fs.readFileSync(path.join(root,"src/app/main.js"),"utf8");
+  assert.match(source,/非保單合約利益/);assert.match(source,/指定獨立第三方服務供應商/);assert.match(source,/直接向服務供應商付款/);assert.match(source,/暫停或終止/);
+});
+test("result rendering leads with guaranteed first-phase HKD income and keeps Year 8 secondary",()=>{
+  const source=fs.readFileSync(path.join(root,"src/app/main.js"),"utf8");
+  assert.match(source,/renderResult=correctedRenderResult/);assert.match(source,/renderHealth=safeRenderHealth/);
+  assert.match(source,/cashflowPresentation\(calc,state\.accumulation,Number\(state\.hkdPerUsd\)\)/);
+  assert.match(source,/第8年起預期每月現金流/);assert.match(source,/首5年：累積期，暫無每月收入/);
 });
 test("release version has one canonical source and matches visible label contract",()=>{
   const release=JSON.parse(fs.readFileSync(path.join(root,"release.json"),"utf8"));assert.equal(release.version,"v0.1.0");
