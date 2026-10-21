@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="zh-Hant-HK">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f6f8fb">
+  <meta name="description" content="將累積的財富，轉化成每月現金流。">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./assets/everbliss.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./src/ui/tokens.css">
+  <link rel="stylesheet" href="./src/ui/styles.css">
+  <title>EverBliss｜退休現金流規劃</title>
+</head>
+<body>
+  <div class="app-frame">
+    <header class="app-header">
+      <a class="brand" href="#home" aria-label="EverBliss 首頁">
+        <span class="brand-mark" aria-hidden="true">E</span>
+        <span><strong>EverBliss</strong><small id="app-version">載入版本…</small></span>
+      </a>
+      <a class="return-link" id="return-ava" href="https://ivancww.github.io/avaplatform/">
+        <svg class="ava-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg><span>返回 AVA</span>
+      </a>
+    </header>
+    <main id="app" tabindex="-1" aria-live="polite"></main>
+    <footer class="app-footer"><span>EverBliss · 退休現金流規劃</span><span id="save-status">資料只儲存在此裝置</span></footer>
+  </div>
+  <dialog id="notice-dialog" aria-labelledby="notice-title"><div class="dialog-body"><button class="icon-button dialog-close" data-action="close-dialog" aria-label="關閉">×</button><h2 id="notice-title"></h2><div id="notice-content"></div></div></dialog>
+  <script type="module" src="./src/app/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+{
+  "id": "./",
+  "name": "EverBliss 退休現金流規劃",
+  "short_name": "EverBliss",
+  "description": "將累積的財富，轉化成每月現金流。",
+  "lang": "zh-Hant-HK",
+  "start_url": "./?avaEntry=frontend",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f6f8fb",
+  "theme_color": "#f6f8fb",
+  "icons": [
+    {"src":"./assets/everbliss.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}
+  ]
+}
