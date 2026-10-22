@@ -14,7 +14,7 @@ EverBliss helps a customer understand how part of retirement assets might be con
 - Start now means guaranteed income begins at policy month 1. Five-year deferred means guaranteed income begins at policy month 61. Potential non-guaranteed income begins at month 85 in either mode.
 - The primary result shows the first actual income phase: current guaranteed monthly income for immediate mode, or Year 6 guaranteed income for deferred mode. The Year-8-and-later expected total is secondary. HKD is shown using the entered rate with USD detail and an FX caveat.
 - Non-guaranteed income is separately disclosed and may be higher, lower, or zero.
-- Exact supplied income anchors are used at supported ages; intermediate ages are linearly interpolated only between same-gender, same-mode official income anchors. These values are visibly distinguished from Official quotes. Surrender and death schedules use the 36 parsed Official proposal curves with per-year interpolation only within the shared curve endpoint; they do not infer benefit data from income rates.
+- Exact supplied income anchors are used at supported ages; intermediate ages are linearly interpolated only between same-gender, same-mode official income anchors. Surrender and death schedules use the 36 parsed Official proposal curves and interpolate each multiplier by attained age and policy year. All 104 supported scenarios have continuous schedules through attained age 100; the engine never derives surrender or death values from income rates.
 - Premiums above US$25,000 are marked `SCALED_FROM_OFFICIAL`, not as direct proposal values.
 - Customer input is HKD. No HKD/USD rate is embedded; the customer must enter a rate for conversion.
 
@@ -37,4 +37,4 @@ The comparison capability is implemented as an App-owned page and data boundary 
 
 ## Admin and User scope
 
-Frontstage is the customer experience. `avaEntry=user` opens that same Frontstage with local editing, preview, save, and reset for the Home hero copy. These edits are stored as `USER_OVERRIDE`; calculations, product data, Government data, and source metadata are protected. `avaEntry=admin` fails closed because no AVA Studio authorization or Official Write connector is implemented. This App declares `admin: false`.
+Frontstage is the customer experience. `avaEntry=user` opens that same Frontstage with local editing, preview, save, and reset for permitted Home hero copy. These edits are stored as `USER_OVERRIDE`; calculations, product data, Government data, and source metadata are protected. The app-owned `avaEntry=admin` surface is declared for future Platform registration, but fails closed without AVA proof and a successful server exchange. Its domain tabs, filtering, draft, validation, review, and publish states are implemented; publication remains blocked until the verified AVA server verifier and live Google Sheet/GAS connector are configured. No separate password or query-only authorization exists.
