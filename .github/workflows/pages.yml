@@ -21,6 +21,7 @@ jobs:
       - run: npm run build
         env:
           GITHUB_SHA: ${{ github.sha }}
+          EVERBLISS_OFFICIAL_ENDPOINT: ${{ vars.EVERBLISS_OFFICIAL_ENDPOINT }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
