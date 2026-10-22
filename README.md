@@ -36,6 +36,10 @@ The GitHub Pages workflow builds the static shell and stamps its immutable commi
 
 ## Data sources and calculated values
 
+- The Full Outcome Engine uses the Canonical Data Pack v1 in `docs/research/` and its normalized runtime modules under `src/data/official/`. Income is premium × age/gender/mode rate; surrender and death are premium × policy-year multiplier.
+- Income covers all 104 issue-age/gender/mode combinations from ages 50–75, with `OFFICIAL` and `INTERPOLATED` provenance. The pack has 19 `OFFICIAL_PARSED` surrender/death curves. Interpolated multiplier fields remain explicitly `INTERPOLATED` with source ages; unbracketed fields remain unavailable.
+- The customer outcome view switches one selected policy year among annual income, total surrender value, and total death benefit. Annual income schedule is continuous through attained age 100. Missing multiplier years are not filled from income or other benefit fields.
+- The pack's parsed death totals disagree with examples in earlier task instructions. This implementation follows the explicitly selected pack and records examples and discrepancies in `docs/calculation-rules.md`; product-owner source reconciliation is needed before customer release.
 - Official product timing, benefits, and service qualifications use AIA's official EverBliss product material.
 - Verified US$25,000 annual income anchors for ages 50, 52, 55, 57, 60, 65, 67, and 70 where supplied are recorded as Official inputs. Original proposal PDFs/reference IDs were not attached; the metadata preserves that provenance limitation.
 - Premium-scaled results are labeled `SCALED_FROM_OFFICIAL`; they are not presented as official proposal quotations.

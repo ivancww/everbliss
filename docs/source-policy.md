@@ -1,12 +1,15 @@
 # Source policy
 
-## Product
+## Canonical product data
 
-- Product structure, issue-age range, income start timing, health benefit, recipient transfer, advance income, death-benefit wording, and service qualifications: AIA Hong Kong product page: https://www.aia.com.hk/en/products/save/everbliss-annuity
-- US$25,000 annual income anchors for ages 50/52/55/57/60/65/67/70 as applicable: product-owner supplied as verified proposal inputs in the PR #1 final correction request dated 2026-10-21. The original proposal PDFs/reference IDs were not attached; this provenance limit remains explicit in data metadata.
-- Age interpolation is linear and limited to two surrounding anchors for the same gender, accumulation mode, benefit type, and policy-year dimension. No extrapolation. Interpolated values are never labeled Official.
-- Year-10 cash value, terminal bonus, surrender, and death-benefit values are currently provided only for age 50. Do not infer these from income data.
-- Do not fill missing ages, policy years, exchange rates, benefits, or product values with estimates and call them Official.
+- The canonical research input for the Full Outcome Engine is Canonical Data Pack v1, retained in `docs/research/` and `src/data/official/`.
+- Income rate values preserve `OFFICIAL` or `INTERPOLATED` provenance. The pack contains complete rate rows for 50–75, male/female, immediate/deferred (104 scenarios).
+- Parsed proposal outcome curves retain `OFFICIAL_PARSED` provenance and source filename, age, gender, mode, base premium, and annual rows. The pack contains 19 parsed scenarios and 655 year rows.
+- Missing age values interpolate only between surrounding same-gender, same-mode official anchors, independently per policy year and per multiplier. They preserve `INTERPOLATED` plus source ages.
+- Missing policy-year fields or unsupported brackets stay unavailable. Income data never supplies surrender/death values. No extrapolation.
+- Customer default is the withdrawal/cashed income scenario identified by the source map. Do not substitute accumulated-income illustrations.
+- A customer premium is scaled from the US$25,000 base. Results do not claim to be a directly generated Official proposal.
+- Earlier task examples for selected death benefits differ from the attached parsed multiplier JSON; `docs/calculation-rules.md` records representative discrepancies. The canonical pack is used pending source-owner reconciliation.
 
 ## Government
 
@@ -18,4 +21,4 @@
 ## Hong Kong Annuity and services
 
 - Hong Kong Annuity comparison data are currently absent; only official HKMC source values may be added later.
-- RetireSmart Health Service uses the official AIA product page and service leaflet: https://www.aia.com.hk/en/products/save/everbliss-annuity and https://www.aia.com.hk/content/dam/hk-wise/pdf/en/RetireSmart-Health-Service-leaflet-en.pdf (checked 2026-10-21). It is non-contractual and non-guaranteed, supplied by an independent third party, with possible customer-paid extra/ancillary services. AIA may amend, suspend, terminate, or change service terms. Do not infer additional services or fees.
+- RetireSmart Health Service uses the official AIA product page and service leaflet: https://www.aia.com.hk/en/products/save/everbliss-annuity and https://www.aia.com.hk/content/dam/hk-wise/pdf/en/RetireSmart-Health-Service-leaflet-en.pdf (checked 2026-10-21). It is non-contractual and provider/fee/eligibility caveats are disclosed in the UI.

@@ -67,6 +67,9 @@ test("browser and installed-PWA entry share the App Service Worker update lifecy
 
 test("updated Official age data remains in the staged PWA shell",()=>{
   assert.match(template,/\.\/src\/data\/official\/everbliss-anchors\.js/);
+  assert.match(template,/\.\/src\/calculations\/full-outcomes\.js/);
+  assert.match(template,/\.\/src\/data\/official\/income-rates\.js/);
+  assert.match(template,/\.\/src\/data\/official\/official-multipliers\.js/);
   assert.match(template,/cache\.addAll\(SHELL_FILES\)/);
   assert.match(template,/const BUILD_ID = "__BUILD_ID__"/);
 });

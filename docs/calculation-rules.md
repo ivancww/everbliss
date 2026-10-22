@@ -1,16 +1,23 @@
 # Calculation rules — v0.1.0
 
-- Age anchor selection is exact by issue age, gender, and accumulation mode. If exact data is absent, linear interpolation is allowed only between verified same-gender, same-mode anchors that bracket the requested integer age. No extrapolation is allowed; an unsupported combination returns `NO_OFFICIAL_AGE_ANCHOR`.
-- Accepted product issue age follows official product information; the customer planning input is restricted to the 50–70 target context.
-- USD premium must be within US$25,000–US$4,000,000. Exact anchor plus anchor premium is `OFFICIAL`; interpolated ages remain `INTERPOLATED`; premium scaling is independently recorded as `SCALED_FROM_OFFICIAL` in `premiumSourceType`.
-- Guaranteed monthly income = official guaranteed annual income ÷ 12 × premium factor.
-- Non-guaranteed monthly income = official Year-8 NG annual income ÷ 12 × premium factor. It is zero in Year 1–7 and begins at policy month 85.
-- Immediate guarantee begins at month 1; deferred guarantee begins at month 61.
-- Year-10 cumulative displayed income counts guaranteed and potential NG only for months in which those components have started.
-- Health extra monthly income = 50% × guaranteed monthly income, never the displayed guaranteed + NG total.
-- Year-10 surrender total = guaranteed cash value + terminal bonus.
-- Guaranteed death value follows the task-provided rule: higher of guaranteed cash value and 105% of single premium less cumulative guaranteed income paid. Expected total adds the scaled official terminal bonus. Unrecovered advance income and other contract adjustments are outside the current scenario because they are not inputs.
-- HKD/USD conversion = HKD amount ÷ user-entered HKD-per-USD rate. No default rate exists.
-- The OALA calculator subtracts the intended annuity premium from the entered assessable assets and adds stated surrender proceeds; it adds the annuity payment to monthly assessable income. It is a simplified preliminary scenario and omits other eligibility conditions and individualized SWD determinations.
-- Death, guaranteed cash value, terminal bonus, and surrender outputs are available only where an exact policy-year anchor exists. Income interpolation never creates these values.
-- The result page's primary amount is the first guaranteed income phase: current monthly income for immediate mode, or Year 6 for deferred mode. Year-8-plus total is secondary. HKD display is approximate using the user's entered rate.
+## Canonical rate and multiplier model
+
+The canonical input is `docs/research/everbliss-engine-spec.md` and the bundled Canonical Data Pack v1. Income is calculated as premium × annual income rate. Surrender and death are calculated as premium × the policy-year multiplier. Base data is US$25,000; supported premium is US$25,000–US$4,000,000, inclusive, for any amount in range.
+
+- Income rates are indexed by issue age, gender, and mode. Exact data retains `OFFICIAL`; interpolated data retains `INTERPOLATED` and its source ages.
+- Parsed surrender and death multiplier curves retain `OFFICIAL_PARSED`; missing issue ages interpolate each policy year and field separately, retaining `INTERPOLATED` and both source ages.
+- No extrapolation or cross-gender/cross-mode interpolation is allowed. A field/year without two valid anchors remains unavailable.
+- Immediate income: Years 1–7 use the guaranteed rate; Year 8 onward uses the total expected rate.
+- Deferred income: Years 1–5 are zero; Years 6–7 use the guaranteed rate; Year 8 onward uses the total expected rate.
+- Annual schedules are continuous to attained age 100 for income. Multiplier values remain unavailable past the endpoint of a bracketing Official parsed table.
+- HKD display uses user-entered HKD per USD; no exchange rate is embedded. Displayed amounts are rounded only for customer presentation.
+- Customer outcome selector shows one active result: annual income, total surrender value, or total death benefit. Parsed total values are not split into component rows.
+
+## Other existing product calculations
+
+- Health extra monthly income = 50% × guaranteed monthly income, never the displayed guaranteed + non-guaranteed total.
+- OALA remains a preliminary simulation: it deducts the entered annuity premium from declared assessable assets and adds surrender proceeds; annuity payment is added to monthly income. It does not confirm eligibility or guarantee treatment for a specific EverBliss policy.
+
+## Canonical source validation caveat
+
+The attached Canonical Data Pack's parsed death multipliers do not agree with examples supplied in earlier task instructions. For example, age 60 male immediate Year 10 is parsed as death total US$34,633 (1.38532×), while earlier instructions gave US$20,225 (0.809×). Age 75 male immediate Year 10 is parsed as US$34,281 (1.37124×), while earlier instructions gave US$15,900. This build uses the explicitly designated canonical pack as the runtime source and preserves the parsed values; the discrepancy requires product-owner/source confirmation before customer release.
