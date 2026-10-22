@@ -36,9 +36,10 @@ test("HK Annuity comparison is hidden by default and remains a separate optional
   assert.equal(appDefaults.showHongKongAnnuityComparison,false);
   const appSource=fs.readFileSync(path.join(root,"src/app/main.js"),"utf8");assert.match(appSource,/if\(!appDefaults\.showHongKongAnnuityComparison\)/);assert.match(appSource,/hkComparison:renderHiddenComparison/);
 });
-test("capabilities fail closed for Admin while Front and User are declared",()=>{
-  assert.deepEqual(appCapabilities,{frontend:true,user:true,admin:false});
-  const appSource=fs.readFileSync(path.join(root,"src/app/main.js"),"utf8");assert.match(appSource,/entry==="admin"/);assert.match(appSource,/網址或查詢參數只用於路由/);
+test("Front, User and protected Admin are declared; query route cannot grant access",()=>{
+  assert.deepEqual(appCapabilities,{frontend:true,user:true,admin:true});
+  const appSource=fs.readFileSync(path.join(root,"src/app/main.js"),"utf8");const authSource=fs.readFileSync(path.join(root,"src/admin/admin-auth.js"),"utf8");
+  assert.match(appSource,/entry==="admin"/);assert.match(appSource,/ADMIN ACCESS DENIED/);assert.match(authSource,/ava-admin-session-v1/);assert.match(authSource,/event\?\.source !== opener/);assert.match(authSource,/event\?\.origin !== platformOrigin/);
 });
 test("feature hub and Return to AVA remain part of the shell",()=>{
   const html=fs.readFileSync(path.join(root,"index.html"),"utf8");const appSource=fs.readFileSync(path.join(root,"src/app/main.js"),"utf8");
