@@ -14,7 +14,7 @@ EverBliss helps a customer understand how part of retirement assets might be con
 - Start now means guaranteed income begins at policy month 1. Five-year deferred means guaranteed income begins at policy month 61. Potential non-guaranteed income begins at month 85 in either mode.
 - The primary result shows the first actual income phase: current guaranteed monthly income for immediate mode, or Year 6 guaranteed income for deferred mode. The Year-8-and-later expected total is secondary. HKD is shown using the entered rate with USD detail and an FX caveat.
 - Non-guaranteed income is separately disclosed and may be higher, lower, or zero.
-- Exact supplied income anchors are used at supported ages; intermediate ages are linearly interpolated only between same-gender, same-mode official income anchors. These values are visibly distinguished from Official quotes. Ages/combinations outside bracketing anchors remain unavailable. Only age-50 anchors currently include Year-10 death/cash-value data.
+- Exact supplied income anchors are used at supported ages; intermediate ages are linearly interpolated only between same-gender, same-mode official income anchors. These values are visibly distinguished from Official quotes. Surrender and death schedules use the 36 parsed Official proposal curves with per-year interpolation only within the shared curve endpoint; they do not infer benefit data from income rates.
 - Premiums above US$25,000 are marked `SCALED_FROM_OFFICIAL`, not as direct proposal values.
 - Customer input is HKD. No HKD/USD rate is embedded; the customer must enter a rate for conversion.
 
