@@ -12,6 +12,7 @@ const releasePath = path.join(dist, "release.json");
 const release = JSON.parse(await fs.readFile(releasePath, "utf8"));
 const buildId = process.env.GITHUB_SHA || process.env.EVERBLISS_BUILD_ID || "local-build";
 release.buildId = buildId;
+release.officialEndpoint = process.env.EVERBLISS_OFFICIAL_ENDPOINT || release.officialEndpoint || "";
 await fs.writeFile(releasePath, `${JSON.stringify(release, null, 2)}\n`);
 const swTemplate = await fs.readFile(path.join(root, "src/pwa/sw-template.js"), "utf8");
 await fs.writeFile(path.join(dist, "sw.js"), swTemplate.replaceAll("__BUILD_ID__", buildId));
