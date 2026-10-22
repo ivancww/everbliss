@@ -24,6 +24,14 @@ Base premium: **US$25,000**
 - `75M_deferred` — `75歲 男 延(1).pdf` — OFFICIAL_PARSED — Year 1–25 (25 rows)
 - `75M_immediate` — `75yr 男 即(1).pdf` — OFFICIAL_PARSED — Year 1–25 (25 rows)
 
+## Death-total extraction correction
+
+For each of the 19 scenarios above, the death curve was reparsed from the `支取每月入息（詳細說明）` detailed withdrawal/cashed-income scenario, specifically the death-benefit columns `保證身故價值`, `終期紅利`, and `總額`. This avoids the accumulated-income scenario and excludes cumulative withdrawn income / interest from the death benefit. The runtime fields preserve the two components, displayed total, multiplier, source-table label, and extraction date (`2026-10-22`).
+
+All 655 year rows were re-extracted. 653 component sums exactly equal the Official displayed total. In 75F Deferred Years 22 and 23, displayed rounded components sum to one USD more than the displayed total; the Official total is retained and the `deathComponentRoundingError: -1` metadata records the source rounding. Maximum absolute difference is US$1.
+
+Surrender rows and multipliers were preserved unchanged.
+
 ## Indexed / known official anchors not materialized in this run
 
 - Age 50: Female/Male Immediate and Deferred exist in conversation files but their raw backing files were not downloadable in this run.

@@ -61,12 +61,12 @@ test("premium multiplication matches canonical examples for 60M immediate and de
   assert.equal(immediate.schedule[0].annualDisplayedIncome, 42000);
   assert.equal(immediate.schedule[7].annualDisplayedIncome, 66000);
   assert.equal(immediate.schedule[9].surrenderValue, 568400);
-  assert.equal(immediate.schedule[9].deathBenefit, 1385320);
+  assert.equal(immediate.schedule[9].deathBenefit, 809000);
   const deferred = calculateOutcome({ issueAge: 60, gender: "M", mode: "deferred", premiumUsd: 1000000 });
   assert.equal(deferred.schedule[5].annualDisplayedIncome, 53640);
   assert.equal(deferred.schedule[7].annualDisplayedIncome, 83640);
   assert.equal(deferred.schedule[9].surrenderValue, 720080);
-  assert.equal(deferred.schedule[9].deathBenefit, 1389720);
+  assert.equal(deferred.schedule[9].deathBenefit, 1002800);
 });
 
 test("official parsed multiplier anchors preserve per-year values and provenance", () => {
@@ -79,6 +79,7 @@ test("official parsed multiplier anchors preserve per-year values and provenance
   assert.equal(death.value, official.deathMultiplier);
   assert.equal(calculateOutcome({ issueAge: 75, gender: "M", mode: "immediate", premiumUsd: 25000 }).schedule[9].surrenderValue, official.surrenderTotal);
   assert.equal(calculateOutcome({ issueAge: 75, gender: "M", mode: "immediate", premiumUsd: 25000 }).schedule[9].deathBenefit, official.deathTotal);
+  assert.equal(official.guaranteedDeathValue + official.terminalBonus, official.deathTotal);
 });
 
 test("multiplier interpolation keeps provenance and fails closed without bracketing data", () => {
@@ -94,4 +95,42 @@ test("unsupported premium boundaries fail closed", () => {
   for (const premiumUsd of [24999.99, 4000000.01, NaN]) {
     assert.equal(calculateOutcome({ issueAge: 60, gender: "F", mode: "immediate", premiumUsd }).available, false);
   }
+});
+
+
+test("withdrawal-scenario parsed death components reconcile across all official rows", () => {
+  const exceptions = [];
+  let rows = 0;
+  let exact = 0;
+  let maxAbsError = 0;
+  for (const [scenarioKey, scenario] of Object.entries(officialMultiplierData.scenarios)) {
+    assert.match(scenario.deathSourceTable, /^支取每月入息（詳細說明）/);
+    for (const [policyYear, row] of Object.entries(scenario.years)) {
+      rows++;
+      const error = row.deathTotal - (row.guaranteedDeathValue + row.terminalBonus);
+      assert.equal(error, row.deathComponentRoundingError, `${scenarioKey} year ${policyYear}`);
+      maxAbsError = Math.max(maxAbsError, Math.abs(error));
+      if (error === 0) exact++;
+      else exceptions.push([scenarioKey, Number(policyYear), error]);
+      assert.equal(row.deathMultiplier, row.deathTotal / 25000);
+    }
+  }
+  assert.equal(rows, 655);
+  assert.equal(exact, 653);
+  assert.deepEqual(exceptions, [["75F_deferred", 22, -1], ["75F_deferred", 23, -1]]);
+  assert.equal(maxAbsError, 1);
+});
+
+test("withdrawal death regressions match the Official proposal totals", () => {
+  const immediate60m = officialMultiplierData.scenarios["60M_immediate"].years["10"];
+  assert.equal(immediate60m.guaranteedDeathValue, 15750);
+  assert.equal(immediate60m.terminalBonus, 4475);
+  assert.equal(immediate60m.deathTotal, 20225);
+  assert.equal(calculateOutcome({ issueAge: 60, gender: "M", mode: "immediate", premiumUsd: 1000000 }).schedule[9].deathBenefit, 809000);
+
+  const immediate75m = officialMultiplierData.scenarios["75M_immediate"].years["10"];
+  assert.equal(immediate75m.guaranteedDeathValue, 12750);
+  assert.equal(immediate75m.terminalBonus, 3150);
+  assert.equal(immediate75m.deathTotal, 15900);
+  assert.equal(calculateOutcome({ issueAge: 75, gender: "M", mode: "immediate", premiumUsd: 25000 }).schedule[9].deathBenefit, 15900);
 });
