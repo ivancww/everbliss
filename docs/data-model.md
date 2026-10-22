@@ -2,27 +2,26 @@
 
 ## Local stores
 
-- IndexedDB database `ava-everbliss-local`, schema version 1.
-- `appState`: one customer-local journey record, including current page, inputs, FX entry, and OALA inputs.
-- `userOverrides`: presentation-only local overrides, separated from journey data and Official data.
-- A namespaced LocalStorage fallback is used only where IndexedDB is unavailable. No blanket clear/delete operation is used.
+- IndexedDB database `ava-everbliss-local`, schema version 2 (upgrades from v1 without deleting data).
+- `appState`: customer-local journey inputs, route, outcome view/year and OALA inputs.
+- `userOverrides`: presentation-only local overrides, separate from journey state and Official data.
+- `officialLastKnownGood`: validated last-known-good Official dataset cache, separate from User Overrides.
+- Namespaced LocalStorage fallback is used only when IndexedDB is unavailable. No blanket clear/delete operation is used.
 
 ## Ownership and precedence
 
-1. `BUILT_IN_DEFAULT`: journey copy and App configuration defaults.
-2. `OFFICIAL`: product terms, source-backed proposal anchors, SWD limits/payment values, and source metadata.
-3. `USER_OVERRIDE`: allowed personal presentation settings, rendered over built-in copy where permitted.
+Calculation Official data resolves as `VALID_CLOUD_OFFICIAL → LAST_KNOWN_GOOD_OFFICIAL → VERIFIED_BUILT_IN_OFFICIAL_FALLBACK`. Presentation defaults may be overlaid by allowed `USER_OVERRIDE` fields. No User Override value is sent to GAS or stored in the Official Sheet.
 
-User overrides cannot mutate Official records, calculation logic, protected product terms, Government facts, or source metadata. There is no production Official Write path in v0.1.0.
+User overrides cannot mutate Official records, calculation logic, product terms, Government facts, or source metadata. Live Official writes remain unavailable until the Google resources and AVA server-side proof exchange are deployed and verified.
 
-## Product data provenance fields
+## Product data provenance
 
-The EverBliss income and outcome records include product, gender, issue age, accumulation mode, single premium, source type, source reference, and policy-year values. Income has verified US$25,000 anchors across ages 50–75; exact age values are `OFFICIAL` and bracketed values are `INTERPOLATED` with source ages retained. The outcome multiplier dataset has 36 `OFFICIAL_PARSED` proposal curves across exact ages 50, 52, 55, 57, 60, 65, 67, 70, and 75 where available. Every new annual row includes its source file and withdrawal-table page references for surrender and death. Missing issue ages interpolate same-gender, same-mode, same-policy-year, same-field values only while both Official curves contain that year. The schedule ends at that shared endpoint. Premium scaling is tagged `SCALED_FROM_OFFICIAL`; no outcome value is inferred from income rates.
+Income Official anchors are expanded at runtime to all 104 age/gender/mode records using same-gender and same-mode interpolation. Exact anchors keep `OFFICIAL`; derived rates carry `INTERPOLATED` and source ages. The multiplier source pack has 36 `OFFICIAL_PARSED` proposal curves with annual withdrawal-scenario rows. For missing issue ages, surrender and death multipliers are interpolated independently by field, same attained age, gender, and mode. If an Official proposal begins after the requested attained age at the first duration edge, its first row is used only to complete that edge; the overlapping annual curve remains attained-age aligned. Every supported schedule ends at attained age 100. Premium scaling is `SCALED_FROM_OFFICIAL`.
 
-## OALA source metadata
+## Government source metadata
 
-The OALA dataset includes effective date, verification date, age, single/couple income and asset limits, monthly benefit, treatment of annuity premium/payout/surrender value, source titles, and official SWD URLs.
+OALA data stores effective date, verification date, age, single/couple income and asset limits, monthly benefit, treatment metadata, source titles, and official SWD URLs.
 
-## Future Admin domains
+## Admin domains
 
-Product terms; official age/proposal anchors; Government/OALA data; HK Annuity comparison data; feature/service content; system information. Domains remain read-only until an authenticated AVA Studio connector and persisted-write evidence are implemented.
+The App-owned Admin domains are Product Config, Income Rates, Surrender Multipliers, Death Multipliers, Official Sources, and Dataset Status. The launch route requires AVA `ava-admin-session-v1` proof and a server-side exchange; URL routing alone is not authorization. The Sheet schema and GAS endpoint preparation are documented in `docs/google-sheet-gas-architecture.md`. No production deployment or write path exists yet.
