@@ -1,11 +1,21 @@
-import { incomeRateData } from "../data/official/income-rates.js";
-import { officialMultiplierData } from "../data/official/official-multipliers.js";
+import { incomeRateData as bundledIncomeRateData } from "../data/official/income-rates.js";
+import { officialMultiplierData as bundledMultiplierData } from "../data/official/official-multipliers.js";
 
 const BASE_PREMIUM = 25000;
 const MIN_PREMIUM = 25000;
 const MAX_PREMIUM = 4000000;
-const ratesByKey = new Map(incomeRateData.rates.map(row => [`${row.age}|${row.gender}|${row.mode}`, row]));
-const scenarioRows = Object.values(officialMultiplierData.scenarios);
+let activeIncomeRateData = bundledIncomeRateData;
+let activeMultiplierData = bundledMultiplierData;
+let ratesByKey = new Map(activeIncomeRateData.rates.map(row => [`${row.age}|${row.gender}|${row.mode}`, row]));
+let scenarioRows = Object.values(activeMultiplierData.scenarios);
+
+export function setOfficialCalculationDataset(dataset) {
+  if (!Array.isArray(dataset?.incomeRates?.rates) || !dataset?.multipliers?.scenarios) throw new Error("Invalid Official calculation dataset");
+  activeIncomeRateData = dataset.incomeRates;
+  activeMultiplierData = dataset.multipliers;
+  ratesByKey = new Map(activeIncomeRateData.rates.map(row => [`${row.age}|${row.gender}|${row.mode}`, row]));
+  scenarioRows = Object.values(activeMultiplierData.scenarios);
+}
 
 const key = (age, gender, mode) => `${age}|${gender}|${mode}`;
 const money = value => Math.round(value + Number.EPSILON);
@@ -18,7 +28,7 @@ export function getIncomeRates({ issueAge, gender, mode }) {
 }
 
 function exactScenario(issueAge, gender, mode) {
-  return officialMultiplierData.scenarios[`${issueAge}${gender}_${mode}`] || null;
+  return activeMultiplierData.scenarios[`${issueAge}${gender}_${mode}`] || null;
 }
 
 function bracketScenarios(issueAge, gender, mode) {
@@ -36,6 +46,9 @@ export function interpolateAgeValue({ age, lowerAge, upperAge, lowerValue, upper
 }
 
 function getMultiplier({ issueAge, gender, mode, policyYear, field }) {
+  if (!Number.isInteger(issueAge) || issueAge < 50 || issueAge > 75 || !Number.isInteger(policyYear) || policyYear < 1) return null;
+  const targetAttainedAge = issueAge + policyYear;
+  if (targetAttainedAge > 100) return null;
   const direct = exactScenario(issueAge, gender, mode);
   if (direct) {
     const value = direct.years[String(policyYear)]?.[field];
@@ -44,25 +57,30 @@ function getMultiplier({ issueAge, gender, mode, policyYear, field }) {
   const brackets = bracketScenarios(issueAge, gender, mode);
   if (!brackets) return null;
   const [lower, upper] = brackets;
-  const lowerValue = lower.years[String(policyYear)]?.[field];
-  const upperValue = upper.years[String(policyYear)]?.[field];
+  const rowAtAttainedAge = scenario => {
+    const rows = Object.values(scenario.years);
+    const exact = rows.find(row => row.attainedAge === targetAttainedAge);
+    if (exact) return exact;
+    // Proposal illustrations begin at attained age issueAge + 1. For the
+    // first interpolated duration, the upper anchor can therefore have no
+    // row at the requested age. Use its first displayed duration only for
+    // this boundary row; all overlapping years remain attained-age aligned.
+    return targetAttainedAge < rows[0]?.attainedAge ? rows[0] : null;
+  };
+  const lowerValue = rowAtAttainedAge(lower)?.[field];
+  const upperValue = rowAtAttainedAge(upper)?.[field];
   if (!Number.isFinite(lowerValue) || !Number.isFinite(upperValue)) return null;
   const value = interpolateAgeValue({ age: issueAge, lowerAge: lower.issueAge, upperAge: upper.issueAge, lowerValue, upperValue });
   return value === null ? null : { value, sourceType: "INTERPOLATED", sourceAges: [lower.issueAge, upper.issueAge] };
 }
 
 function getSupportedMultiplierYears({ issueAge, gender, mode }) {
-  const direct = exactScenario(issueAge, gender, mode);
-  if (direct) return Object.keys(direct.years).length;
-  const brackets = bracketScenarios(issueAge, gender, mode);
-  if (!brackets) return 0;
-  const [lower, upper] = brackets;
-  let year = 1;
-  while (Number.isFinite(lower.years[String(year)]?.surrenderMultiplier)
-    && Number.isFinite(upper.years[String(year)]?.surrenderMultiplier)
-    && Number.isFinite(lower.years[String(year)]?.deathMultiplier)
-    && Number.isFinite(upper.years[String(year)]?.deathMultiplier)) year++;
-  return year - 1;
+  const requestedYears = 100 - issueAge;
+  for (let year = 1; year <= requestedYears; year++) {
+    if (!getMultiplier({ issueAge, gender, mode, policyYear: year, field: "surrenderMultiplier" })
+      || !getMultiplier({ issueAge, gender, mode, policyYear: year, field: "deathMultiplier" })) return year - 1;
+  }
+  return requestedYears;
 }
 
 export function getSurrenderMultiplier(input) {
@@ -79,9 +97,8 @@ export function calculateOutcome({ issueAge, gender, mode, premiumUsd }) {
   if (!Number.isFinite(premiumUsd) || premiumUsd < MIN_PREMIUM || premiumUsd > MAX_PREMIUM) {
     return { available: false, reason: "PREMIUM_OUT_OF_RANGE" };
   }
-  // For interpolated ages, stop at the last policy year present in both
-  // surrounding Official curves. The source proposals end at attained age 100,
-  // so their overlapping policy-year range can end earlier than age 100.
+  // Align interpolated Official curves by attained age, so each supported
+  // issue age reaches the same source-supported endpoint (attained age 100).
   const requestedYears = 100 - issueAge;
   const years = Math.min(requestedYears, getSupportedMultiplierYears({ issueAge, gender, mode }));
   const schedule = Array.from({ length: years }, (_, index) => {
