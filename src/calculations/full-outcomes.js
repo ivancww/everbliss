@@ -51,6 +51,20 @@ function getMultiplier({ issueAge, gender, mode, policyYear, field }) {
   return value === null ? null : { value, sourceType: "INTERPOLATED", sourceAges: [lower.issueAge, upper.issueAge] };
 }
 
+function getSupportedMultiplierYears({ issueAge, gender, mode }) {
+  const direct = exactScenario(issueAge, gender, mode);
+  if (direct) return Object.keys(direct.years).length;
+  const brackets = bracketScenarios(issueAge, gender, mode);
+  if (!brackets) return 0;
+  const [lower, upper] = brackets;
+  let year = 1;
+  while (Number.isFinite(lower.years[String(year)]?.surrenderMultiplier)
+    && Number.isFinite(upper.years[String(year)]?.surrenderMultiplier)
+    && Number.isFinite(lower.years[String(year)]?.deathMultiplier)
+    && Number.isFinite(upper.years[String(year)]?.deathMultiplier)) year++;
+  return year - 1;
+}
+
 export function getSurrenderMultiplier(input) {
   return getMultiplier({ ...input, field: "surrenderMultiplier" });
 }
@@ -65,7 +79,11 @@ export function calculateOutcome({ issueAge, gender, mode, premiumUsd }) {
   if (!Number.isFinite(premiumUsd) || premiumUsd < MIN_PREMIUM || premiumUsd > MAX_PREMIUM) {
     return { available: false, reason: "PREMIUM_OUT_OF_RANGE" };
   }
-  const years = 100 - issueAge;
+  // For interpolated ages, stop at the last policy year present in both
+  // surrounding Official curves. The source proposals end at attained age 100,
+  // so their overlapping policy-year range can end earlier than age 100.
+  const requestedYears = 100 - issueAge;
+  const years = Math.min(requestedYears, getSupportedMultiplierYears({ issueAge, gender, mode }));
   const schedule = Array.from({ length: years }, (_, index) => {
     const policyYear = index + 1;
     const noIncome = mode === "deferred" && policyYear <= 5;
@@ -123,8 +141,10 @@ export function calculateOutcome({ issueAge, gender, mode, premiumUsd }) {
       income: true,
       surrender: schedule.every(row => row.surrenderValue !== null),
       death: schedule.every(row => row.deathBenefit !== null),
-      surrenderFirstMissingYear: schedule.find(row => row.surrenderValue === null)?.policyYear ?? null,
-      deathFirstMissingYear: schedule.find(row => row.deathBenefit === null)?.policyYear ?? null
+      surrenderFirstMissingYear: years < requestedYears ? years + 1 : null,
+      deathFirstMissingYear: years < requestedYears ? years + 1 : null,
+      sourceSupportedPolicyYears: years,
+      sourceSupportedEndpointAge: issueAge + years
     }
   };
 }

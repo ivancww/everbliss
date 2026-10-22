@@ -16,7 +16,8 @@ test("full 104-age/gender/mode income matrix resolves with explicit source prove
     assert.ok(rates, `${issueAge}${gender} ${mode} income rates`);
     assert.equal(result.available, true);
     assert.ok(["OFFICIAL", "INTERPOLATED"].includes(result.incomeSourceType));
-    assert.equal(result.schedule.length, 100 - issueAge);
+    assert.ok(result.schedule.length > 0);
+    assert.equal(result.schedule.length, result.coverage.sourceSupportedPolicyYears);
     scenarios++;
   }
   assert.equal(scenarios, 104);
@@ -26,7 +27,7 @@ test("all 104 scenarios accept ten arbitrary premiums from the supported range",
   for (const issueAge of ages) for (const gender of genders) for (const mode of modes) for (const premiumUsd of premiums) {
     const result = calculateOutcome({ issueAge, gender, mode, premiumUsd });
     assert.equal(result.available, true, `${issueAge}${gender} ${mode} $${premiumUsd}`);
-    assert.equal(result.schedule.length, 100 - issueAge);
+    assert.equal(result.schedule.length, result.coverage.sourceSupportedPolicyYears);
     for (const row of result.schedule) {
       assert.ok(Number.isFinite(row.annualDisplayedIncome));
       assert.ok(row.annualDisplayedIncome >= 0);
@@ -36,11 +37,16 @@ test("all 104 scenarios accept ten arbitrary premiums from the supported range",
   }
 });
 
-test("annual policy years are continuous through attained age 100", () => {
+test("annual policy years are continuous through each source-supported endpoint", () => {
   for (const issueAge of ages) for (const gender of genders) for (const mode of modes) {
-    const schedule = calculateOutcome({ issueAge, gender, mode, premiumUsd: 318000 }).schedule;
-    assert.deepEqual(schedule.map(row => row.policyYear), Array.from({ length: 100 - issueAge }, (_, i) => i + 1));
-    assert.equal(schedule.at(-1).attainedAge, 100);
+    const result = calculateOutcome({ issueAge, gender, mode, premiumUsd: 318000 });
+    const { schedule, coverage } = result;
+    assert.deepEqual(schedule.map(row => row.policyYear), Array.from({ length: coverage.sourceSupportedPolicyYears }, (_, i) => i + 1));
+    assert.ok(schedule.every(row => row.surrenderValue !== null && row.deathBenefit !== null));
+    assert.equal(schedule.at(-1).attainedAge, coverage.sourceSupportedEndpointAge);
+    if (officialMultiplierData.scenarios[`${issueAge}${gender}_${mode}`]) assert.equal(coverage.sourceSupportedEndpointAge, 100);
+    assert.equal(coverage.surrenderFirstMissingYear, coverage.sourceSupportedPolicyYears < 100 - issueAge ? coverage.sourceSupportedPolicyYears + 1 : null);
+    assert.equal(coverage.deathFirstMissingYear, coverage.surrenderFirstMissingYear);
   }
 });
 
@@ -82,12 +88,50 @@ test("official parsed multiplier anchors preserve per-year values and provenance
   assert.equal(official.guaranteedDeathValue + official.terminalBonus, official.deathTotal);
 });
 
-test("multiplier interpolation keeps provenance and fails closed without bracketing data", () => {
+test("Official multiplier anchor coverage includes ages 50, 52, 55M deferred, 57 and 67", () => {
+  for (const age of [50, 52, 57, 67]) for (const gender of genders) for (const mode of modes) {
+    const scenario = officialMultiplierData.scenarios[`${age}${gender}_${mode}`];
+    assert.ok(scenario, `${age}${gender} ${mode} exact Official proposal`);
+    assert.equal(scenario.sourceType, "OFFICIAL_PARSED");
+  }
+  assert.equal(officialMultiplierData.scenarios["55M_deferred"].sourceType, "OFFICIAL_PARSED");
+  assert.equal(Object.keys(officialMultiplierData.scenarios).length, 36);
+});
+
+test("all 104 supported scenarios resolve every multiplier year in the Official bracket overlap", () => {
+  let scenarios = 0;
+  const missing = [];
+  for (const issueAge of ages) for (const gender of genders) for (const mode of modes) {
+    const result = calculateOutcome({ issueAge, gender, mode, premiumUsd: 25000 });
+    assert.equal(result.available, true);
+    assert.equal(result.schedule.length, result.coverage.sourceSupportedPolicyYears);
+    for (const row of result.schedule) {
+      if (row.surrenderValue === null) missing.push(`${issueAge}${gender}/${mode}/surrender/year${row.policyYear}`);
+      if (row.deathBenefit === null) missing.push(`${issueAge}${gender}/${mode}/death/year${row.policyYear}`);
+      assert.ok(Number.isFinite(row.surrenderMultiplier), `${issueAge}${gender}/${mode} surrender year ${row.policyYear}`);
+      assert.ok(Number.isFinite(row.deathMultiplier), `${issueAge}${gender}/${mode} death year ${row.policyYear}`);
+    }
+    assert.equal(result.coverage.surrender, true, `${issueAge}${gender}/${mode} surrender coverage`);
+    assert.equal(result.coverage.death, true, `${issueAge}${gender}/${mode} death coverage`);
+    const firstUnsupportedTailYear = result.coverage.sourceSupportedPolicyYears < 100 - issueAge
+      ? result.coverage.sourceSupportedPolicyYears + 1
+      : null;
+    assert.equal(result.coverage.surrenderFirstMissingYear, firstUnsupportedTailYear);
+    assert.equal(result.coverage.deathFirstMissingYear, firstUnsupportedTailYear);
+    scenarios++;
+  }
+  assert.equal(scenarios, 104);
+  assert.deepEqual(missing, []);
+});
+
+test("multiplier interpolation keeps provenance and fails closed outside the source range", () => {
   const interpolated = getSurrenderMultiplier({ issueAge: 62, gender: "F", mode: "immediate", policyYear: 10 });
   assert.equal(interpolated.sourceType, "INTERPOLATED");
   assert.deepEqual(interpolated.sourceAges, [60, 65]);
-  assert.equal(getDeathMultiplier({ issueAge: 52, gender: "F", mode: "immediate", policyYear: 10 }), null);
-  assert.equal(getSurrenderMultiplier({ issueAge: 55, gender: "M", mode: "deferred", policyYear: 10 }), null);
+  assert.equal(getDeathMultiplier({ issueAge: 52, gender: "F", mode: "immediate", policyYear: 10 }).sourceType, "OFFICIAL_PARSED");
+  assert.equal(getSurrenderMultiplier({ issueAge: 55, gender: "M", mode: "deferred", policyYear: 10 }).sourceType, "OFFICIAL_PARSED");
+  assert.equal(getSurrenderMultiplier({ issueAge: 50, gender: "F", mode: "immediate", policyYear: 10 }).sourceType, "OFFICIAL_PARSED");
+  assert.equal(getSurrenderMultiplier({ issueAge: 75, gender: "M", mode: "immediate", policyYear: 10 }).sourceType, "OFFICIAL_PARSED");
   assert.equal(getSurrenderMultiplier({ issueAge: 49, gender: "F", mode: "immediate", policyYear: 10 }), null);
 });
 
@@ -115,10 +159,23 @@ test("withdrawal-scenario parsed death components reconcile across all official 
       assert.equal(row.deathMultiplier, row.deathTotal / 25000);
     }
   }
-  assert.equal(rows, 655);
-  assert.equal(exact, 653);
+  assert.equal(rows, 1396);
+  assert.equal(exact, 1394);
   assert.deepEqual(exceptions, [["75F_deferred", 22, -1], ["75F_deferred", 23, -1]]);
   assert.equal(maxAbsError, 1);
+});
+
+test("newly parsed withdrawal surrender components reconcile to their Official totals", () => {
+  let rows = 0;
+  for (const scenario of Object.values(officialMultiplierData.scenarios)) {
+    for (const [year, row] of Object.entries(scenario.years)) {
+      if (!Number.isFinite(row.guaranteedCashValue) || !Number.isFinite(row.surrenderTerminalBonus)) continue;
+      assert.equal(row.surrenderTotal - (row.guaranteedCashValue + row.surrenderTerminalBonus), row.surrenderComponentRoundingError, `${scenario.sourceFile} year ${year}`);
+      assert.equal(row.surrenderMultiplier, row.surrenderTotal / 25000);
+      rows++;
+    }
+  }
+  assert.equal(rows, 741);
 });
 
 test("withdrawal death regressions match the Official proposal totals", () => {

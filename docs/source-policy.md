@@ -4,12 +4,12 @@
 
 - The canonical research input for the Full Outcome Engine is Canonical Data Pack v1, retained in `docs/research/` and `src/data/official/`.
 - Income rate values preserve `OFFICIAL` or `INTERPOLATED` provenance. The pack contains complete rate rows for 50–75, male/female, immediate/deferred (104 scenarios).
-- Parsed proposal outcome curves retain `OFFICIAL_PARSED` provenance and source filename, age, gender, mode, base premium, and annual rows. The pack contains 19 parsed scenarios and 655 year rows.
+- Parsed proposal outcome curves retain `OFFICIAL_PARSED` provenance and source filename, age, gender, mode, base premium, and annual rows. The dataset contains 36 parsed scenarios and 1,396 year rows, including all available exact 50/52/57/67 anchors and exact 55M Deferred.
 - Missing age values interpolate only between surrounding same-gender, same-mode official anchors, independently per policy year and per multiplier. They preserve `INTERPOLATED` plus source ages.
 - Missing policy-year fields or unsupported brackets stay unavailable. Income data never supplies surrender/death values. No extrapolation.
 - Customer default is the withdrawal/cashed income scenario identified by the source map. Do not substitute accumulated-income illustrations.
 - A customer premium is scaled from the US$25,000 base. Results do not claim to be a directly generated Official proposal.
-- Earlier task examples for selected death benefits differ from the attached parsed multiplier JSON; `docs/calculation-rules.md` records representative discrepancies. The canonical pack is used pending source-owner reconciliation.
+- Parsed surrender and death tables use the withdrawal/cashed-income scenario, and source table page numbers are retained for the 17 newly parsed scenarios. The existing documented US$1 component-rounding exceptions remain explicit; source displayed totals are used for multipliers.
 
 ## Government
 
