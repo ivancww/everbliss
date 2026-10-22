@@ -2,5 +2,6 @@
   "appId": "everbliss",
   "version": "v0.1.0",
   "releaseType": "official",
-  "buildId": "source"
+  "buildId": "source",
+  "officialEndpoint": ""
 }
