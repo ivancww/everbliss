@@ -1,7 +1,8 @@
 const DB_NAME = "ava-everbliss-local";
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STATE_STORE = "appState";
 const OVERRIDE_STORE = "userOverrides";
+const OFFICIAL_CACHE_STORE = "officialLastKnownGood";
 const STATE_KEY = "everbliss";
 
 function openDb() {
@@ -12,6 +13,7 @@ function openDb() {
       const db = request.result;
       if (!db.objectStoreNames.contains(STATE_STORE)) db.createObjectStore(STATE_STORE);
       if (!db.objectStoreNames.contains(OVERRIDE_STORE)) db.createObjectStore(OVERRIDE_STORE);
+      if (!db.objectStoreNames.contains(OFFICIAL_CACHE_STORE)) db.createObjectStore(OFFICIAL_CACHE_STORE);
     };
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error || new Error("IndexedDB open failed"));
@@ -58,6 +60,18 @@ export async function saveUserOverrides(overrides) {
   return record;
 }
 
+export async function loadLastKnownGoodOfficial() {
+  try { return (await requestValue(OFFICIAL_CACHE_STORE, "readonly", "get")) || null; }
+  catch { return safeParse(globalThis.localStorage?.getItem(localKey("official-lkg"))); }
+}
+
+export async function saveLastKnownGoodOfficial(dataset) {
+  const record = { ...dataset, cacheLayer: "LAST_KNOWN_GOOD_OFFICIAL", cachedAt: new Date().toISOString() };
+  try { await requestValue(OFFICIAL_CACHE_STORE, "readwrite", "put", record); }
+  catch { globalThis.localStorage?.setItem(localKey("official-lkg"), JSON.stringify(record)); }
+  return record;
+}
+
 export function createInitialState() {
   return {
     page: "home", journeyStep: "concern", concern: null,
@@ -71,4 +85,4 @@ export function createInitialState() {
   };
 }
 
-export const storageKeys = Object.freeze({ DB_NAME, DB_VERSION, STATE_STORE, OVERRIDE_STORE, STATE_KEY });
+export const storageKeys = Object.freeze({ DB_NAME, DB_VERSION, STATE_STORE, OVERRIDE_STORE, OFFICIAL_CACHE_STORE, STATE_KEY });
