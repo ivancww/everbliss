@@ -49,7 +49,7 @@ The parsed anchors cover ages 50, 52, 55, 57, 60, 65, 67, 70, and 75 where propo
 
 The 17 added proposals were parsed from `支取每月入息（詳細說明）` only. Surrender rows retain guaranteed cash value, terminal bonus, displayed surrender total, multiplier, and source page. Death rows retain guaranteed death value, terminal bonus, displayed total, multiplier, and source page. Every added component sum reconciles exactly to its displayed total (741/741 surrender rows; 741/741 death rows). No accumulated-income rows were included.
 
-For a missing issue age, each multiplier and policy year is interpolated only between surrounding same-gender/same-mode Official anchors. No cross-gender, cross-mode, or age extrapolation is used. A calculated schedule ends at the last policy year present in both bracketing curves. For interpolated ages this can be earlier than attained age 100 because one of the proposals ends at age 100 on a different policy year. The unsupported tail is not returned as an incomplete or fabricated row.
+For a missing issue age, each multiplier is interpolated only between surrounding same-gender/same-mode Official anchors at the same attained age. The target row maps `attainedAge = issueAge + policyYear`; the lower and upper proposal rows may therefore have different policy-year indices. At the first illustrated duration only, when the upper proposal starts after the target attained age, its first illustrated row completes that boundary. No cross-gender, cross-mode, or issue-age extrapolation is used. Every supported schedule is continuous through attained age 100.
 
 The complete death dataset has 1,396 annual rows; 1,394 totals equal rounded death components exactly. Two 75F Deferred rows (Years 22 and 23) show component sums one USD higher than the displayed Official total due to whole-dollar source rounding. The Official total is retained for the multiplier and `deathComponentRoundingError: -1` records each exception.
 
@@ -57,9 +57,9 @@ The complete death dataset has 1,396 annual rows; 1,394 totals equal rounded dea
 
 - `OFFICIAL_PARSED`: direct annual outcome values extracted from an Official proposal PDF.
 - `OFFICIAL`: income rate taken from a known Official proposal anchor.
-- `INTERPOLATED`: value derived linearly between surrounding Official issue-age anchors, same gender + same mode + same policy year + same field; source ages are retained.
+- `INTERPOLATED`: value derived linearly between surrounding Official issue-age anchors, same gender + same mode + same attained age + same field; source ages are retained.
 - Never treat `累積每月入息（詳細說明）` as the default customer outcome. The canonical customer scenario is `支取每月入息（詳細說明）`.
-- Never extrapolate outside issue age 50–75 or outside the shared policy-year range of bracketing curves.
+- Never extrapolate outside issue age 50–75 or past attained age 100.
 
 ## Runtime formulas
 

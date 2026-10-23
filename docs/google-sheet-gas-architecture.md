@@ -1,6 +1,6 @@
 # EverBliss Official Google Sheet and GAS preparation
 
-This repository contains a deployable schema and endpoint design. No EverBliss spreadsheet, GAS project, production `exec` URL, or Script Properties were found in the connected Drive searches or current repository snapshot. No Google resource was created or deployed. Until an approved EverBliss deployment is configured, the verified bundled release data is the runtime fallback; a future validated cloud dataset will take precedence and be cached as Last Known Good.
+This repository contains a deployable schema and endpoint design. The latest read-only live-resource check is recorded in `docs/live-integration-status.md`. On 2026-10-23, no EverBliss spreadsheet, GAS project, production `exec` URL, or Script Properties were found in the connected Drive searches or current repository snapshot. No Google resource was created or deployed, and zero Official multiplier rows were written to a live Sheet. Until an approved EverBliss deployment is configured, the verified bundled release data is the runtime fallback; a future validated cloud dataset will take precedence and be cached as Last Known Good.
 
 ## Official spreadsheet tabs
 
@@ -30,4 +30,4 @@ Admin operations: `getAdminOfficialDataset`, `upsertIncomeRate`, `upsertSurrende
 
 ## Deployment gates
 
-Before cloud data can be called the source of truth, an owner must provision or identify the existing EverBliss spreadsheet and GAS project, set the spreadsheet ID and exact production origins as Script Properties, implement the verified AVA Platform `ava-admin-session-v1` server exchange, deploy the Web App, verify GET/POST behavior, and record deployed source equivalence. This PR leaves these live resource operations untouched. Do not publish a made-up spreadsheet ID or deployment URL.
+Before cloud data can be called the source of truth, an owner must provision or identify the existing EverBliss spreadsheet and GAS project, populate and reconcile the Official rows, set the spreadsheet ID and exact production origins as Script Properties, implement the verified AVA Platform `ava-admin-session-v1` server exchange, deploy the Web App, verify GET/POST behavior, and record deployed source equivalence. This PR leaves these live resource operations untouched. Do not publish a made-up spreadsheet ID or deployment URL.
