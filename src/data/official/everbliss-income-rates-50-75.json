@@ -1,0 +1,1331 @@
+{
+  "schemaVersion": "1.0.0",
+  "basePremiumUsd": 25000,
+  "supportedIssueAge": [
+    50,
+    75
+  ],
+  "supportedPremiumUsd": [
+    25000,
+    4000000
+  ],
+  "rates": [
+    {
+      "age": 50,
+      "gender": "M",
+      "mode": "immediate",
+      "guaranteedRate": 0.0372,
+      "nonGuaranteedRateFromYear8": 0.02196,
+      "totalRateFromYear8": 0.05916,
+      "sourceType": "OFFICIAL",
+      "sourceAges": [
+        50
+      ]
+    },
+    {
+      "age": 51,
+      "gender": "M",
+      "mode": "immediate",
+      "guaranteedRate": 0.03768,
+      "nonGuaranteedRateFromYear8": 0.0222,
+      "totalRateFromYear8": 0.05988,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        50,
+        52
+      ]
+    },
+    {
+      "age": 52,
+      "gender": "M",
+      "mode": "immediate",
+      "guaranteedRate": 0.03816,
+      "nonGuaranteedRateFromYear8": 0.02244,
+      "totalRateFromYear8": 0.0606,
+      "sourceType": "OFFICIAL",
+      "sourceAges": [
+        52
+      ]
+    },
+    {
+      "age": 53,
+      "gender": "M",
+      "mode": "immediate",
+      "guaranteedRate": 0.03864,
+      "nonGuaranteedRateFromYear8": 0.02264,
+      "totalRateFromYear8": 0.06128,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        52,
+        55
+      ]
+    },
+    {
+      "age": 54,
+      "gender": "M",
+      "mode": "immediate",
+      "guaranteedRate": 0.03912,
+      "nonGuaranteedRateFromYear8": 0.02284,
+      "totalRateFromYear8": 0.06196,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        52,
+        55
+      ]
+    },
+    {
+      "age": 55,
+      "gender": "M",
+      "mode": "immediate",
+      "guaranteedRate": 0.0396,
+      "nonGuaranteedRateFromYear8": 0.02304,
+      "totalRateFromYear8": 0.06264,
+      "sourceType": "OFFICIAL",
+      "sourceAges": [
+        55
+      ]
+    },
+    {
+      "age": 56,
+      "gender": "M",
+      "mode": "immediate",
+      "guaranteedRate": 0.04008,
+      "nonGuaranteedRateFromYear8": 0.02322,
+      "totalRateFromYear8": 0.0633,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        55,
+        57
+      ]
+    },
+    {
+      "age": 57,
+      "gender": "M",
+      "mode": "immediate",
+      "guaranteedRate": 0.04056,
+      "nonGuaranteedRateFromYear8": 0.0234,
+      "totalRateFromYear8": 0.06396,
+      "sourceType": "OFFICIAL",
+      "sourceAges": [
+        57
+      ]
+    },
+    {
+      "age": 58,
+      "gender": "M",
+      "mode": "immediate",
+      "guaranteedRate": 0.04104,
+      "nonGuaranteedRateFromYear8": 0.0236,
+      "totalRateFromYear8": 0.06464,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        57,
+        60
+      ]
+    },
+    {
+      "age": 59,
+      "gender": "M",
+      "mode": "immediate",
+      "guaranteedRate": 0.04152,
+      "nonGuaranteedRateFromYear8": 0.0238,
+      "totalRateFromYear8": 0.06532,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        57,
+        60
+      ]
+    },
+    {
+      "age": 60,
+      "gender": "M",
+      "mode": "immediate",
+      "guaranteedRate": 0.042,
+      "nonGuaranteedRateFromYear8": 0.024,
+      "totalRateFromYear8": 0.066,
+      "sourceType": "OFFICIAL",
+      "sourceAges": [
+        60
+      ]
+    },
+    {
+      "age": 61,
+      "gender": "M",
+      "mode": "immediate",
+      "guaranteedRate": 0.042744,
+      "nonGuaranteedRateFromYear8": 0.024504,
+      "totalRateFromYear8": 0.067248,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        60,
+        65
+      ]
+    },
+    {
+      "age": 62,
+      "gender": "M",
+      "mode": "immediate",
+      "guaranteedRate": 0.043488,
+      "nonGuaranteedRateFromYear8": 0.025008,
+      "totalRateFromYear8": 0.068496,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        60,
+        65
+      ]
+    },
+    {
+      "age": 63,
+      "gender": "M",
+      "mode": "immediate",
+      "guaranteedRate": 0.044232,
+      "nonGuaranteedRateFromYear8": 0.025512,
+      "totalRateFromYear8": 0.069744,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        60,
+        65
+      ]
+    },
+    {
+      "age": 64,
+      "gender": "M",
+      "mode": "immediate",
+      "guaranteedRate": 0.044976,
+      "nonGuaranteedRateFromYear8": 0.026016,
+      "totalRateFromYear8": 0.070992,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        60,
+        65
+      ]
+    },
+    {
+      "age": 65,
+      "gender": "M",
+      "mode": "immediate",
+      "guaranteedRate": 0.04572,
+      "nonGuaranteedRateFromYear8": 0.02652,
+      "totalRateFromYear8": 0.07224,
+      "sourceType": "OFFICIAL",
+      "sourceAges": [
+        65
+      ]
+    },
+    {
+      "age": 66,
+      "gender": "M",
+      "mode": "immediate",
+      "guaranteedRate": 0.04656,
+      "nonGuaranteedRateFromYear8": 0.02682,
+      "totalRateFromYear8": 0.07338,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        65,
+        67
+      ]
+    },
+    {
+      "age": 67,
+      "gender": "M",
+      "mode": "immediate",
+      "guaranteedRate": 0.0474,
+      "nonGuaranteedRateFromYear8": 0.02712,
+      "totalRateFromYear8": 0.07452,
+      "sourceType": "OFFICIAL",
+      "sourceAges": [
+        67
+      ]
+    },
+    {
+      "age": 68,
+      "gender": "M",
+      "mode": "immediate",
+      "guaranteedRate": 0.04828,
+      "nonGuaranteedRateFromYear8": 0.02744,
+      "totalRateFromYear8": 0.07572,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        67,
+        70
+      ]
+    },
+    {
+      "age": 69,
+      "gender": "M",
+      "mode": "immediate",
+      "guaranteedRate": 0.04916,
+      "nonGuaranteedRateFromYear8": 0.02776,
+      "totalRateFromYear8": 0.07692,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        67,
+        70
+      ]
+    },
+    {
+      "age": 70,
+      "gender": "M",
+      "mode": "immediate",
+      "guaranteedRate": 0.05004,
+      "nonGuaranteedRateFromYear8": 0.02808,
+      "totalRateFromYear8": 0.07812,
+      "sourceType": "OFFICIAL",
+      "sourceAges": [
+        70
+      ]
+    },
+    {
+      "age": 71,
+      "gender": "M",
+      "mode": "immediate",
+      "guaranteedRate": 0.050832,
+      "nonGuaranteedRateFromYear8": 0.028272,
+      "totalRateFromYear8": 0.079104,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        70,
+        75
+      ]
+    },
+    {
+      "age": 72,
+      "gender": "M",
+      "mode": "immediate",
+      "guaranteedRate": 0.051624,
+      "nonGuaranteedRateFromYear8": 0.028464,
+      "totalRateFromYear8": 0.080088,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        70,
+        75
+      ]
+    },
+    {
+      "age": 73,
+      "gender": "M",
+      "mode": "immediate",
+      "guaranteedRate": 0.052416,
+      "nonGuaranteedRateFromYear8": 0.028656,
+      "totalRateFromYear8": 0.081072,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        70,
+        75
+      ]
+    },
+    {
+      "age": 74,
+      "gender": "M",
+      "mode": "immediate",
+      "guaranteedRate": 0.053208,
+      "nonGuaranteedRateFromYear8": 0.028848,
+      "totalRateFromYear8": 0.082056,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        70,
+        75
+      ]
+    },
+    {
+      "age": 75,
+      "gender": "M",
+      "mode": "immediate",
+      "guaranteedRate": 0.054,
+      "nonGuaranteedRateFromYear8": 0.02904,
+      "totalRateFromYear8": 0.08304,
+      "sourceType": "OFFICIAL",
+      "sourceAges": [
+        75
+      ]
+    },
+    {
+      "age": 50,
+      "gender": "M",
+      "mode": "deferred",
+      "guaranteedRate": 0.04596,
+      "nonGuaranteedRateFromYear8": 0.02652,
+      "totalRateFromYear8": 0.07248,
+      "sourceType": "OFFICIAL",
+      "sourceAges": [
+        50
+      ]
+    },
+    {
+      "age": 51,
+      "gender": "M",
+      "mode": "deferred",
+      "guaranteedRate": 0.04674,
+      "nonGuaranteedRateFromYear8": 0.02688,
+      "totalRateFromYear8": 0.07362,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        50,
+        52
+      ]
+    },
+    {
+      "age": 52,
+      "gender": "M",
+      "mode": "deferred",
+      "guaranteedRate": 0.04752,
+      "nonGuaranteedRateFromYear8": 0.02724,
+      "totalRateFromYear8": 0.07476,
+      "sourceType": "OFFICIAL",
+      "sourceAges": [
+        52
+      ]
+    },
+    {
+      "age": 53,
+      "gender": "M",
+      "mode": "deferred",
+      "guaranteedRate": 0.048288,
+      "nonGuaranteedRateFromYear8": 0.0276,
+      "totalRateFromYear8": 0.075888,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        52,
+        57
+      ]
+    },
+    {
+      "age": 54,
+      "gender": "M",
+      "mode": "deferred",
+      "guaranteedRate": 0.049056,
+      "nonGuaranteedRateFromYear8": 0.02796,
+      "totalRateFromYear8": 0.077016,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        52,
+        57
+      ]
+    },
+    {
+      "age": 55,
+      "gender": "M",
+      "mode": "deferred",
+      "guaranteedRate": 0.049824,
+      "nonGuaranteedRateFromYear8": 0.02832,
+      "totalRateFromYear8": 0.078144,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        52,
+        57
+      ]
+    },
+    {
+      "age": 56,
+      "gender": "M",
+      "mode": "deferred",
+      "guaranteedRate": 0.050592,
+      "nonGuaranteedRateFromYear8": 0.02868,
+      "totalRateFromYear8": 0.079272,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        52,
+        57
+      ]
+    },
+    {
+      "age": 57,
+      "gender": "M",
+      "mode": "deferred",
+      "guaranteedRate": 0.05136,
+      "nonGuaranteedRateFromYear8": 0.02904,
+      "totalRateFromYear8": 0.0804,
+      "sourceType": "OFFICIAL",
+      "sourceAges": [
+        57
+      ]
+    },
+    {
+      "age": 58,
+      "gender": "M",
+      "mode": "deferred",
+      "guaranteedRate": 0.05212,
+      "nonGuaranteedRateFromYear8": 0.02936,
+      "totalRateFromYear8": 0.08148,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        57,
+        60
+      ]
+    },
+    {
+      "age": 59,
+      "gender": "M",
+      "mode": "deferred",
+      "guaranteedRate": 0.05288,
+      "nonGuaranteedRateFromYear8": 0.02968,
+      "totalRateFromYear8": 0.08256,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        57,
+        60
+      ]
+    },
+    {
+      "age": 60,
+      "gender": "M",
+      "mode": "deferred",
+      "guaranteedRate": 0.05364,
+      "nonGuaranteedRateFromYear8": 0.03,
+      "totalRateFromYear8": 0.08364,
+      "sourceType": "OFFICIAL",
+      "sourceAges": [
+        60
+      ]
+    },
+    {
+      "age": 61,
+      "gender": "M",
+      "mode": "deferred",
+      "guaranteedRate": 0.05472,
+      "nonGuaranteedRateFromYear8": 0.030504,
+      "totalRateFromYear8": 0.085224,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        60,
+        65
+      ]
+    },
+    {
+      "age": 62,
+      "gender": "M",
+      "mode": "deferred",
+      "guaranteedRate": 0.0558,
+      "nonGuaranteedRateFromYear8": 0.031008,
+      "totalRateFromYear8": 0.086808,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        60,
+        65
+      ]
+    },
+    {
+      "age": 63,
+      "gender": "M",
+      "mode": "deferred",
+      "guaranteedRate": 0.05688,
+      "nonGuaranteedRateFromYear8": 0.031512,
+      "totalRateFromYear8": 0.088392,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        60,
+        65
+      ]
+    },
+    {
+      "age": 64,
+      "gender": "M",
+      "mode": "deferred",
+      "guaranteedRate": 0.05796,
+      "nonGuaranteedRateFromYear8": 0.032016,
+      "totalRateFromYear8": 0.089976,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        60,
+        65
+      ]
+    },
+    {
+      "age": 65,
+      "gender": "M",
+      "mode": "deferred",
+      "guaranteedRate": 0.05904,
+      "nonGuaranteedRateFromYear8": 0.03252,
+      "totalRateFromYear8": 0.09156,
+      "sourceType": "OFFICIAL",
+      "sourceAges": [
+        65
+      ]
+    },
+    {
+      "age": 66,
+      "gender": "M",
+      "mode": "deferred",
+      "guaranteedRate": 0.06054,
+      "nonGuaranteedRateFromYear8": 0.033,
+      "totalRateFromYear8": 0.09354,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        65,
+        67
+      ]
+    },
+    {
+      "age": 67,
+      "gender": "M",
+      "mode": "deferred",
+      "guaranteedRate": 0.06204,
+      "nonGuaranteedRateFromYear8": 0.03348,
+      "totalRateFromYear8": 0.09552,
+      "sourceType": "OFFICIAL",
+      "sourceAges": [
+        67
+      ]
+    },
+    {
+      "age": 68,
+      "gender": "M",
+      "mode": "deferred",
+      "guaranteedRate": 0.06348,
+      "nonGuaranteedRateFromYear8": 0.034,
+      "totalRateFromYear8": 0.09748,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        67,
+        70
+      ]
+    },
+    {
+      "age": 69,
+      "gender": "M",
+      "mode": "deferred",
+      "guaranteedRate": 0.06492,
+      "nonGuaranteedRateFromYear8": 0.03452,
+      "totalRateFromYear8": 0.09944,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        67,
+        70
+      ]
+    },
+    {
+      "age": 70,
+      "gender": "M",
+      "mode": "deferred",
+      "guaranteedRate": 0.06636,
+      "nonGuaranteedRateFromYear8": 0.03504,
+      "totalRateFromYear8": 0.1014,
+      "sourceType": "OFFICIAL",
+      "sourceAges": [
+        70
+      ]
+    },
+    {
+      "age": 71,
+      "gender": "M",
+      "mode": "deferred",
+      "guaranteedRate": 0.068136,
+      "nonGuaranteedRateFromYear8": 0.035232,
+      "totalRateFromYear8": 0.103368,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        70,
+        75
+      ]
+    },
+    {
+      "age": 72,
+      "gender": "M",
+      "mode": "deferred",
+      "guaranteedRate": 0.069912,
+      "nonGuaranteedRateFromYear8": 0.035424,
+      "totalRateFromYear8": 0.105336,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        70,
+        75
+      ]
+    },
+    {
+      "age": 73,
+      "gender": "M",
+      "mode": "deferred",
+      "guaranteedRate": 0.071688,
+      "nonGuaranteedRateFromYear8": 0.035616,
+      "totalRateFromYear8": 0.107304,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        70,
+        75
+      ]
+    },
+    {
+      "age": 74,
+      "gender": "M",
+      "mode": "deferred",
+      "guaranteedRate": 0.073464,
+      "nonGuaranteedRateFromYear8": 0.035808,
+      "totalRateFromYear8": 0.109272,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        70,
+        75
+      ]
+    },
+    {
+      "age": 75,
+      "gender": "M",
+      "mode": "deferred",
+      "guaranteedRate": 0.07524,
+      "nonGuaranteedRateFromYear8": 0.036,
+      "totalRateFromYear8": 0.11124,
+      "sourceType": "OFFICIAL",
+      "sourceAges": [
+        75
+      ]
+    },
+    {
+      "age": 50,
+      "gender": "F",
+      "mode": "immediate",
+      "guaranteedRate": 0.03564,
+      "nonGuaranteedRateFromYear8": 0.0216,
+      "totalRateFromYear8": 0.05724,
+      "sourceType": "OFFICIAL",
+      "sourceAges": [
+        50
+      ]
+    },
+    {
+      "age": 51,
+      "gender": "F",
+      "mode": "immediate",
+      "guaranteedRate": 0.036,
+      "nonGuaranteedRateFromYear8": 0.02178,
+      "totalRateFromYear8": 0.05778,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        50,
+        52
+      ]
+    },
+    {
+      "age": 52,
+      "gender": "F",
+      "mode": "immediate",
+      "guaranteedRate": 0.03636,
+      "nonGuaranteedRateFromYear8": 0.02196,
+      "totalRateFromYear8": 0.05832,
+      "sourceType": "OFFICIAL",
+      "sourceAges": [
+        52
+      ]
+    },
+    {
+      "age": 53,
+      "gender": "F",
+      "mode": "immediate",
+      "guaranteedRate": 0.0368,
+      "nonGuaranteedRateFromYear8": 0.02212,
+      "totalRateFromYear8": 0.05892,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        52,
+        55
+      ]
+    },
+    {
+      "age": 54,
+      "gender": "F",
+      "mode": "immediate",
+      "guaranteedRate": 0.03724,
+      "nonGuaranteedRateFromYear8": 0.02228,
+      "totalRateFromYear8": 0.05952,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        52,
+        55
+      ]
+    },
+    {
+      "age": 55,
+      "gender": "F",
+      "mode": "immediate",
+      "guaranteedRate": 0.03768,
+      "nonGuaranteedRateFromYear8": 0.02244,
+      "totalRateFromYear8": 0.06012,
+      "sourceType": "OFFICIAL",
+      "sourceAges": [
+        55
+      ]
+    },
+    {
+      "age": 56,
+      "gender": "F",
+      "mode": "immediate",
+      "guaranteedRate": 0.0381,
+      "nonGuaranteedRateFromYear8": 0.02256,
+      "totalRateFromYear8": 0.06066,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        55,
+        57
+      ]
+    },
+    {
+      "age": 57,
+      "gender": "F",
+      "mode": "immediate",
+      "guaranteedRate": 0.03852,
+      "nonGuaranteedRateFromYear8": 0.02268,
+      "totalRateFromYear8": 0.0612,
+      "sourceType": "OFFICIAL",
+      "sourceAges": [
+        57
+      ]
+    },
+    {
+      "age": 58,
+      "gender": "F",
+      "mode": "immediate",
+      "guaranteedRate": 0.03892,
+      "nonGuaranteedRateFromYear8": 0.02284,
+      "totalRateFromYear8": 0.06176,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        57,
+        60
+      ]
+    },
+    {
+      "age": 59,
+      "gender": "F",
+      "mode": "immediate",
+      "guaranteedRate": 0.03932,
+      "nonGuaranteedRateFromYear8": 0.023,
+      "totalRateFromYear8": 0.06232,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        57,
+        60
+      ]
+    },
+    {
+      "age": 60,
+      "gender": "F",
+      "mode": "immediate",
+      "guaranteedRate": 0.03972,
+      "nonGuaranteedRateFromYear8": 0.02316,
+      "totalRateFromYear8": 0.06288,
+      "sourceType": "OFFICIAL",
+      "sourceAges": [
+        60
+      ]
+    },
+    {
+      "age": 61,
+      "gender": "F",
+      "mode": "immediate",
+      "guaranteedRate": 0.040368,
+      "nonGuaranteedRateFromYear8": 0.02364,
+      "totalRateFromYear8": 0.064008,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        60,
+        65
+      ]
+    },
+    {
+      "age": 62,
+      "gender": "F",
+      "mode": "immediate",
+      "guaranteedRate": 0.041016,
+      "nonGuaranteedRateFromYear8": 0.02412,
+      "totalRateFromYear8": 0.065136,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        60,
+        65
+      ]
+    },
+    {
+      "age": 63,
+      "gender": "F",
+      "mode": "immediate",
+      "guaranteedRate": 0.041664,
+      "nonGuaranteedRateFromYear8": 0.0246,
+      "totalRateFromYear8": 0.066264,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        60,
+        65
+      ]
+    },
+    {
+      "age": 64,
+      "gender": "F",
+      "mode": "immediate",
+      "guaranteedRate": 0.042312,
+      "nonGuaranteedRateFromYear8": 0.02508,
+      "totalRateFromYear8": 0.067392,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        60,
+        65
+      ]
+    },
+    {
+      "age": 65,
+      "gender": "F",
+      "mode": "immediate",
+      "guaranteedRate": 0.04296,
+      "nonGuaranteedRateFromYear8": 0.02556,
+      "totalRateFromYear8": 0.06852,
+      "sourceType": "OFFICIAL",
+      "sourceAges": [
+        65
+      ]
+    },
+    {
+      "age": 66,
+      "gender": "F",
+      "mode": "immediate",
+      "guaranteedRate": 0.04368,
+      "nonGuaranteedRateFromYear8": 0.02586,
+      "totalRateFromYear8": 0.06954,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        65,
+        67
+      ]
+    },
+    {
+      "age": 67,
+      "gender": "F",
+      "mode": "immediate",
+      "guaranteedRate": 0.0444,
+      "nonGuaranteedRateFromYear8": 0.02616,
+      "totalRateFromYear8": 0.07056,
+      "sourceType": "OFFICIAL",
+      "sourceAges": [
+        67
+      ]
+    },
+    {
+      "age": 68,
+      "gender": "F",
+      "mode": "immediate",
+      "guaranteedRate": 0.04508,
+      "nonGuaranteedRateFromYear8": 0.0264,
+      "totalRateFromYear8": 0.07148,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        67,
+        70
+      ]
+    },
+    {
+      "age": 69,
+      "gender": "F",
+      "mode": "immediate",
+      "guaranteedRate": 0.04576,
+      "nonGuaranteedRateFromYear8": 0.02664,
+      "totalRateFromYear8": 0.0724,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        67,
+        70
+      ]
+    },
+    {
+      "age": 70,
+      "gender": "F",
+      "mode": "immediate",
+      "guaranteedRate": 0.04644,
+      "nonGuaranteedRateFromYear8": 0.02688,
+      "totalRateFromYear8": 0.07332,
+      "sourceType": "OFFICIAL",
+      "sourceAges": [
+        70
+      ]
+    },
+    {
+      "age": 71,
+      "gender": "F",
+      "mode": "immediate",
+      "guaranteedRate": 0.047064,
+      "nonGuaranteedRateFromYear8": 0.027,
+      "totalRateFromYear8": 0.074064,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        70,
+        75
+      ]
+    },
+    {
+      "age": 72,
+      "gender": "F",
+      "mode": "immediate",
+      "guaranteedRate": 0.047688,
+      "nonGuaranteedRateFromYear8": 0.02712,
+      "totalRateFromYear8": 0.074808,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        70,
+        75
+      ]
+    },
+    {
+      "age": 73,
+      "gender": "F",
+      "mode": "immediate",
+      "guaranteedRate": 0.048312,
+      "nonGuaranteedRateFromYear8": 0.02724,
+      "totalRateFromYear8": 0.075552,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        70,
+        75
+      ]
+    },
+    {
+      "age": 74,
+      "gender": "F",
+      "mode": "immediate",
+      "guaranteedRate": 0.048936,
+      "nonGuaranteedRateFromYear8": 0.02736,
+      "totalRateFromYear8": 0.076296,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        70,
+        75
+      ]
+    },
+    {
+      "age": 75,
+      "gender": "F",
+      "mode": "immediate",
+      "guaranteedRate": 0.04956,
+      "nonGuaranteedRateFromYear8": 0.02748,
+      "totalRateFromYear8": 0.07704,
+      "sourceType": "OFFICIAL",
+      "sourceAges": [
+        75
+      ]
+    },
+    {
+      "age": 50,
+      "gender": "F",
+      "mode": "deferred",
+      "guaranteedRate": 0.04368,
+      "nonGuaranteedRateFromYear8": 0.02616,
+      "totalRateFromYear8": 0.06984,
+      "sourceType": "OFFICIAL",
+      "sourceAges": [
+        50
+      ]
+    },
+    {
+      "age": 51,
+      "gender": "F",
+      "mode": "deferred",
+      "guaranteedRate": 0.04434,
+      "nonGuaranteedRateFromYear8": 0.02646,
+      "totalRateFromYear8": 0.0708,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        50,
+        52
+      ]
+    },
+    {
+      "age": 52,
+      "gender": "F",
+      "mode": "deferred",
+      "guaranteedRate": 0.045,
+      "nonGuaranteedRateFromYear8": 0.02676,
+      "totalRateFromYear8": 0.07176,
+      "sourceType": "OFFICIAL",
+      "sourceAges": [
+        52
+      ]
+    },
+    {
+      "age": 53,
+      "gender": "F",
+      "mode": "deferred",
+      "guaranteedRate": 0.04564,
+      "nonGuaranteedRateFromYear8": 0.02708,
+      "totalRateFromYear8": 0.07272,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        52,
+        55
+      ]
+    },
+    {
+      "age": 54,
+      "gender": "F",
+      "mode": "deferred",
+      "guaranteedRate": 0.04628,
+      "nonGuaranteedRateFromYear8": 0.0274,
+      "totalRateFromYear8": 0.07368,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        52,
+        55
+      ]
+    },
+    {
+      "age": 55,
+      "gender": "F",
+      "mode": "deferred",
+      "guaranteedRate": 0.04692,
+      "nonGuaranteedRateFromYear8": 0.02772,
+      "totalRateFromYear8": 0.07464,
+      "sourceType": "OFFICIAL",
+      "sourceAges": [
+        55
+      ]
+    },
+    {
+      "age": 56,
+      "gender": "F",
+      "mode": "deferred",
+      "guaranteedRate": 0.04758,
+      "nonGuaranteedRateFromYear8": 0.02802,
+      "totalRateFromYear8": 0.0756,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        55,
+        57
+      ]
+    },
+    {
+      "age": 57,
+      "gender": "F",
+      "mode": "deferred",
+      "guaranteedRate": 0.04824,
+      "nonGuaranteedRateFromYear8": 0.02832,
+      "totalRateFromYear8": 0.07656,
+      "sourceType": "OFFICIAL",
+      "sourceAges": [
+        57
+      ]
+    },
+    {
+      "age": 58,
+      "gender": "F",
+      "mode": "deferred",
+      "guaranteedRate": 0.04888,
+      "nonGuaranteedRateFromYear8": 0.0286,
+      "totalRateFromYear8": 0.07748,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        57,
+        60
+      ]
+    },
+    {
+      "age": 59,
+      "gender": "F",
+      "mode": "deferred",
+      "guaranteedRate": 0.04952,
+      "nonGuaranteedRateFromYear8": 0.02888,
+      "totalRateFromYear8": 0.0784,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        57,
+        60
+      ]
+    },
+    {
+      "age": 60,
+      "gender": "F",
+      "mode": "deferred",
+      "guaranteedRate": 0.05016,
+      "nonGuaranteedRateFromYear8": 0.02916,
+      "totalRateFromYear8": 0.07932,
+      "sourceType": "OFFICIAL",
+      "sourceAges": [
+        60
+      ]
+    },
+    {
+      "age": 61,
+      "gender": "F",
+      "mode": "deferred",
+      "guaranteedRate": 0.051048,
+      "nonGuaranteedRateFromYear8": 0.02964,
+      "totalRateFromYear8": 0.080688,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        60,
+        65
+      ]
+    },
+    {
+      "age": 62,
+      "gender": "F",
+      "mode": "deferred",
+      "guaranteedRate": 0.051936,
+      "nonGuaranteedRateFromYear8": 0.03012,
+      "totalRateFromYear8": 0.082056,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        60,
+        65
+      ]
+    },
+    {
+      "age": 63,
+      "gender": "F",
+      "mode": "deferred",
+      "guaranteedRate": 0.052824,
+      "nonGuaranteedRateFromYear8": 0.0306,
+      "totalRateFromYear8": 0.083424,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        60,
+        65
+      ]
+    },
+    {
+      "age": 64,
+      "gender": "F",
+      "mode": "deferred",
+      "guaranteedRate": 0.053712,
+      "nonGuaranteedRateFromYear8": 0.03108,
+      "totalRateFromYear8": 0.084792,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        60,
+        65
+      ]
+    },
+    {
+      "age": 65,
+      "gender": "F",
+      "mode": "deferred",
+      "guaranteedRate": 0.0546,
+      "nonGuaranteedRateFromYear8": 0.03156,
+      "totalRateFromYear8": 0.08616,
+      "sourceType": "OFFICIAL",
+      "sourceAges": [
+        65
+      ]
+    },
+    {
+      "age": 66,
+      "gender": "F",
+      "mode": "deferred",
+      "guaranteedRate": 0.05568,
+      "nonGuaranteedRateFromYear8": 0.03198,
+      "totalRateFromYear8": 0.08766,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        65,
+        67
+      ]
+    },
+    {
+      "age": 67,
+      "gender": "F",
+      "mode": "deferred",
+      "guaranteedRate": 0.05676,
+      "nonGuaranteedRateFromYear8": 0.0324,
+      "totalRateFromYear8": 0.08916,
+      "sourceType": "OFFICIAL",
+      "sourceAges": [
+        67
+      ]
+    },
+    {
+      "age": 68,
+      "gender": "F",
+      "mode": "deferred",
+      "guaranteedRate": 0.05784,
+      "nonGuaranteedRateFromYear8": 0.03288,
+      "totalRateFromYear8": 0.09072,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        67,
+        70
+      ]
+    },
+    {
+      "age": 69,
+      "gender": "F",
+      "mode": "deferred",
+      "guaranteedRate": 0.05892,
+      "nonGuaranteedRateFromYear8": 0.03336,
+      "totalRateFromYear8": 0.09228,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        67,
+        70
+      ]
+    },
+    {
+      "age": 70,
+      "gender": "F",
+      "mode": "deferred",
+      "guaranteedRate": 0.06,
+      "nonGuaranteedRateFromYear8": 0.03384,
+      "totalRateFromYear8": 0.09384,
+      "sourceType": "OFFICIAL",
+      "sourceAges": [
+        70
+      ]
+    },
+    {
+      "age": 71,
+      "gender": "F",
+      "mode": "deferred",
+      "guaranteedRate": 0.061248,
+      "nonGuaranteedRateFromYear8": 0.033984,
+      "totalRateFromYear8": 0.095232,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        70,
+        75
+      ]
+    },
+    {
+      "age": 72,
+      "gender": "F",
+      "mode": "deferred",
+      "guaranteedRate": 0.062496,
+      "nonGuaranteedRateFromYear8": 0.034128,
+      "totalRateFromYear8": 0.096624,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        70,
+        75
+      ]
+    },
+    {
+      "age": 73,
+      "gender": "F",
+      "mode": "deferred",
+      "guaranteedRate": 0.063744,
+      "nonGuaranteedRateFromYear8": 0.034272,
+      "totalRateFromYear8": 0.098016,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        70,
+        75
+      ]
+    },
+    {
+      "age": 74,
+      "gender": "F",
+      "mode": "deferred",
+      "guaranteedRate": 0.064992,
+      "nonGuaranteedRateFromYear8": 0.034416,
+      "totalRateFromYear8": 0.099408,
+      "sourceType": "INTERPOLATED",
+      "sourceAges": [
+        70,
+        75
+      ]
+    },
+    {
+      "age": 75,
+      "gender": "F",
+      "mode": "deferred",
+      "guaranteedRate": 0.06624,
+      "nonGuaranteedRateFromYear8": 0.03456,
+      "totalRateFromYear8": 0.1008,
+      "sourceType": "OFFICIAL",
+      "sourceAges": [
+        75
+      ]
+    }
+  ]
+}
