@@ -127,8 +127,9 @@ test("all 104 supported scenarios resolve every multiplier year through age 100"
 
 test("multiplier interpolation keeps provenance and fails closed outside the source range", () => {
   const interpolated = getSurrenderMultiplier({ issueAge: 62, gender: "F", mode: "immediate", policyYear: 10 });
-  assert.equal(interpolated.sourceType, "INTERPOLATED");
+  assert.equal(interpolated.sourceType, "ATTAINED_AGE_INTERPOLATED");
   assert.deepEqual(interpolated.sourceAges, [60, 65]);
+  assert.equal(interpolated.sourceAttainedAge, 72);
   assert.equal(getDeathMultiplier({ issueAge: 52, gender: "F", mode: "immediate", policyYear: 10 }).sourceType, "OFFICIAL_PARSED");
   assert.equal(getSurrenderMultiplier({ issueAge: 55, gender: "M", mode: "deferred", policyYear: 10 }).sourceType, "OFFICIAL_PARSED");
   assert.equal(getSurrenderMultiplier({ issueAge: 50, gender: "F", mode: "immediate", policyYear: 10 }).sourceType, "OFFICIAL_PARSED");
@@ -145,8 +146,46 @@ test("interpolated multiplier curves align Official rows by attained age", () =>
   assert.equal(upper.attainedAge, 100);
   assert.equal(surrender.value, lower.surrenderMultiplier + (upper.surrenderMultiplier - lower.surrenderMultiplier) / 2);
   assert.equal(death.value, lower.deathMultiplier + (upper.deathMultiplier - lower.deathMultiplier) / 2);
-  assert.equal(surrender.sourceType, "INTERPOLATED");
+  assert.equal(surrender.sourceType, "ATTAINED_AGE_INTERPOLATED");
   assert.deepEqual(surrender.sourceAges, [50, 52]);
+  assert.equal(surrender.sourceAttainedAge, 100);
+  assert.deepEqual(surrender.sourcePolicyYears, [50, 48]);
+  assert.equal(death.sourceType, "ATTAINED_AGE_INTERPOLATED");
+  assert.equal(death.sourceAttainedAge, 100);
+  assert.deepEqual(death.sourcePolicyYears, [50, 48]);
+});
+
+test("first-year boundary interpolation is explicit for all missing ages, genders and modes", () => {
+  const interpolatedAges = [51, 53, 54, 56, 58, 59, 61, 62, 63, 64, 66, 68, 69, 71, 72, 73, 74];
+  let checks = 0;
+  for (const issueAge of interpolatedAges) for (const gender of genders) for (const mode of modes) {
+    for (const getter of [getSurrenderMultiplier, getDeathMultiplier]) {
+      const value = getter({ issueAge, gender, mode, policyYear: 1 });
+      assert.ok(Number.isFinite(value?.value), `${issueAge}${gender}/${mode} ${getter.name}`);
+      assert.equal(value.sourceType, "BOUNDARY_INTERPOLATED");
+      const [lowerAge, upperAge] = value.sourceAges;
+      assert.deepEqual(value.sourcePolicyYears, [1, 1]);
+      assert.equal(value.sourceAttainedAge, null);
+      const lowerRow = officialMultiplierData.scenarios[`${lowerAge}${gender}_${mode}`].years["1"];
+      const upperRow = officialMultiplierData.scenarios[`${upperAge}${gender}_${mode}`].years["1"];
+      assert.notEqual(lowerRow.attainedAge, upperRow.attainedAge, "boundary provenance must not imply matched attained ages");
+      checks++;
+    }
+  }
+  assert.equal(checks, 17 * 2 * 2 * 2);
+});
+
+test("outcome schedule exposes source rows for boundary and attained-age interpolation", () => {
+  const result = calculateOutcome({ issueAge: 51, gender: "M", mode: "immediate", premiumUsd: 25000 });
+  const first = result.schedule[0];
+  assert.equal(first.surrenderSourceType, "BOUNDARY_INTERPOLATED");
+  assert.deepEqual(first.surrenderSourceAges, [50, 52]);
+  assert.deepEqual(first.surrenderSourcePolicyYears, [1, 1]);
+  assert.equal(first.surrenderSourceAttainedAge, null);
+  const last = result.schedule.at(-1);
+  assert.equal(last.deathSourceType, "ATTAINED_AGE_INTERPOLATED");
+  assert.equal(last.deathSourceAttainedAge, 100);
+  assert.deepEqual(last.deathSourcePolicyYears, [50, 48]);
 });
 
 test("unsupported premium boundaries fail closed", () => {

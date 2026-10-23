@@ -16,7 +16,7 @@ User overrides cannot mutate Official records, calculation logic, product terms,
 
 ## Product data provenance
 
-Income Official anchors are expanded at runtime to all 104 age/gender/mode records using same-gender and same-mode interpolation. Exact anchors keep `OFFICIAL`; derived rates carry `INTERPOLATED` and source ages. The multiplier source pack has 36 `OFFICIAL_PARSED` proposal curves with annual withdrawal-scenario rows. For missing issue ages, surrender and death multipliers are interpolated independently by field, same attained age, gender, and mode. If an Official proposal begins after the requested attained age at the first duration edge, its first row is used only to complete that edge; the overlapping annual curve remains attained-age aligned. Every supported schedule ends at attained age 100. Premium scaling is `SCALED_FROM_OFFICIAL`.
+Income Official anchors are expanded at runtime to all 104 age/gender/mode records using same-gender and same-mode interpolation. Exact anchors keep `OFFICIAL`; derived rates carry `INTERPOLATED` and source ages. The multiplier source pack has 36 `OFFICIAL_PARSED` proposal curves with annual withdrawal-scenario rows. For missing issue ages, surrender and death multipliers are interpolated independently by field and gender/mode. If both proposals contain the requested attained age, the result is `ATTAINED_AGE_INTERPOLATED` and records attained age plus each source policy year. If either lacks it at an early duration, use equal policy years and mark `BOUNDARY_INTERPOLATED`, retaining both source years; no mismatched attained ages are labeled as standard interpolation. Every supported schedule ends at attained age 100. Premium scaling is `SCALED_FROM_OFFICIAL`.
 
 ## Government source metadata
 

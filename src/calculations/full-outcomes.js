@@ -52,26 +52,41 @@ function getMultiplier({ issueAge, gender, mode, policyYear, field }) {
   const direct = exactScenario(issueAge, gender, mode);
   if (direct) {
     const value = direct.years[String(policyYear)]?.[field];
-    return Number.isFinite(value) ? { value, sourceType: "OFFICIAL_PARSED", sourceAges: [issueAge], sourceFile: direct.sourceFile } : null;
+    return Number.isFinite(value) ? { value, sourceType: "OFFICIAL_PARSED", sourceAges: [issueAge], sourcePolicyYears: [policyYear], sourceFile: direct.sourceFile } : null;
   }
   const brackets = bracketScenarios(issueAge, gender, mode);
   if (!brackets) return null;
   const [lower, upper] = brackets;
-  const rowAtAttainedAge = scenario => {
-    const rows = Object.values(scenario.years);
-    const exact = rows.find(row => row.attainedAge === targetAttainedAge);
-    if (exact) return exact;
-    // Proposal illustrations begin at attained age issueAge + 1. For the
-    // first interpolated duration, the upper anchor can therefore have no
-    // row at the requested age. Use its first displayed duration only for
-    // this boundary row; all overlapping years remain attained-age aligned.
-    return targetAttainedAge < rows[0]?.attainedAge ? rows[0] : null;
-  };
-  const lowerValue = rowAtAttainedAge(lower)?.[field];
-  const upperValue = rowAtAttainedAge(upper)?.[field];
+  const lowerRowAtTargetAge = Object.values(lower.years).find(row => row.attainedAge === targetAttainedAge);
+  const upperRowAtTargetAge = Object.values(upper.years).find(row => row.attainedAge === targetAttainedAge);
+  let lowerRow;
+  let upperRow;
+  let sourceType;
+  let sourceAttainedAge = null;
+  let sourcePolicyYears;
+  if (lowerRowAtTargetAge && upperRowAtTargetAge) {
+    lowerRow = lowerRowAtTargetAge;
+    upperRow = upperRowAtTargetAge;
+    sourceType = "ATTAINED_AGE_INTERPOLATED";
+    sourceAttainedAge = targetAttainedAge;
+    sourcePolicyYears = [targetAttainedAge - lower.issueAge, targetAttainedAge - upper.issueAge];
+  } else {
+    // Early durations may precede an anchor proposal's first attained age.
+    // Interpolate both proposals at the same policy duration and identify
+    // this boundary method explicitly; do not present it as age-aligned.
+    lowerRow = lower.years[String(policyYear)];
+    upperRow = upper.years[String(policyYear)];
+    if (!lowerRow || !upperRow) return null;
+    sourceType = "BOUNDARY_INTERPOLATED";
+    sourcePolicyYears = [policyYear, policyYear];
+  }
+  const lowerValue = lowerRow?.[field];
+  const upperValue = upperRow?.[field];
   if (!Number.isFinite(lowerValue) || !Number.isFinite(upperValue)) return null;
   const value = interpolateAgeValue({ age: issueAge, lowerAge: lower.issueAge, upperAge: upper.issueAge, lowerValue, upperValue });
-  return value === null ? null : { value, sourceType: "INTERPOLATED", sourceAges: [lower.issueAge, upper.issueAge] };
+  return value === null ? null : {
+    value, sourceType, sourceAges: [lower.issueAge, upper.issueAge], sourceAttainedAge, sourcePolicyYears
+  };
 }
 
 function getSupportedMultiplierYears({ issueAge, gender, mode }) {
@@ -122,10 +137,14 @@ export function calculateOutcome({ issueAge, gender, mode, premiumUsd }) {
       surrenderValue: surrender ? money(premiumUsd * surrender.value) : null,
       surrenderSourceType: surrender?.sourceType ?? "UNAVAILABLE",
       surrenderSourceAges: surrender?.sourceAges ?? null,
+      surrenderSourceAttainedAge: surrender?.sourceAttainedAge ?? null,
+      surrenderSourcePolicyYears: surrender?.sourcePolicyYears ?? null,
       deathMultiplier: death?.value ?? null,
       deathBenefit: death ? money(premiumUsd * death.value) : null,
       deathSourceType: death?.sourceType ?? "UNAVAILABLE",
       deathSourceAges: death?.sourceAges ?? null,
+      deathSourceAttainedAge: death?.sourceAttainedAge ?? null,
+      deathSourcePolicyYears: death?.sourcePolicyYears ?? null,
       incomeSourceType: income.sourceType,
       incomeSourceAges: income.sourceAges,
       premiumSourceType: premiumUsd === BASE_PREMIUM ? "OFFICIAL_BASE" : "SCALED_FROM_OFFICIAL"
@@ -171,5 +190,5 @@ export const fullOutcomeDataMeta = Object.freeze({
   supportedPremiumUsd: Object.freeze([MIN_PREMIUM, MAX_PREMIUM]),
   supportedIssueAge: Object.freeze([50, 75]),
   parsedOfficialScenarioCount: scenarioRows.length,
-  sourceType: Object.freeze(["OFFICIAL_PARSED", "OFFICIAL", "INTERPOLATED"])
+  sourceType: Object.freeze(["OFFICIAL_PARSED", "OFFICIAL", "INTERPOLATED", "ATTAINED_AGE_INTERPOLATED", "BOUNDARY_INTERPOLATED"])
 });
