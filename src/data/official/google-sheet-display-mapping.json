@@ -1,0 +1,104 @@
+{
+  "schemaVersion": "1",
+  "tabs": {
+    "ProductConfig": {
+      "displayName": "產品設定",
+      "fields": ["key", "value", "value_type", "effective_date", "verified_date", "source", "record_version", "updated_at"]
+    },
+    "IncomeRates": {
+      "displayName": "每年收入回報率",
+      "fields": ["record_id", "issue_age", "gender", "mode", "guaranteed_rate", "ng_rate_from_year8", "total_rate_from_year8", "source_type", "source_file", "source_version", "verified_date", "record_version", "updated_at"]
+    },
+    "SurrenderMultipliers": {
+      "displayName": "退保價值倍數",
+      "fields": ["record_id", "issue_age", "gender", "mode", "policy_year", "attained_age", "surrender_total_usd_25k", "surrender_multiplier", "source_type", "source_file", "source_version", "verified_date", "record_version", "updated_at"]
+    },
+    "DeathMultipliers": {
+      "displayName": "身故賠償倍數",
+      "fields": ["record_id", "issue_age", "gender", "mode", "policy_year", "attained_age", "guaranteed_death_value_usd_25k", "terminal_bonus_usd_25k", "death_total_usd_25k", "death_multiplier", "source_type", "source_file", "source_version", "verified_date", "record_version", "updated_at"]
+    },
+    "OfficialSources": {
+      "displayName": "官方資料來源",
+      "fields": ["source_id", "filename", "issue_age", "gender", "mode", "base_premium_usd", "proposal_generator_version", "table_type", "extraction_date", "verified_date", "status", "notes"]
+    },
+    "DatasetMeta": {
+      "displayName": "數據版本管理",
+      "fields": ["dataset_name", "dataset_version", "schema_version", "published_version", "status", "source_sha", "updated_at", "published_at", "published_by"]
+    },
+    "AuditLog": {
+      "displayName": "修改紀錄",
+      "fields": ["timestamp", "admin_session_id", "operation", "domain", "record_id", "old_value", "new_value", "dataset_version_before", "dataset_version_after", "source_sha"]
+    }
+  },
+  "fieldLabels": {
+    "key": "設定項目",
+    "value": "設定值",
+    "value_type": "資料類型",
+    "effective_date": "生效日期",
+    "verified_date": "核實日期",
+    "source": "資料來源",
+    "record_version": "記錄版本",
+    "updated_at": "更新時間",
+    "record_id": "記錄編號",
+    "issue_age": "投保年齡",
+    "gender": "性別",
+    "mode": "收入模式",
+    "guaranteed_rate": "保證每年收入率",
+    "ng_rate_from_year8": "第8年起非保證收入率",
+    "total_rate_from_year8": "第8年起總收入率",
+    "source_type": "資料類型",
+    "source_file": "官方建議書",
+    "source_version": "建議書版本",
+    "policy_year": "保單年度",
+    "attained_age": "當時年齡",
+    "surrender_total_usd_25k": "US$25,000退保價值",
+    "surrender_multiplier": "退保價值倍數",
+    "guaranteed_death_value_usd_25k": "保證身故價值",
+    "terminal_bonus_usd_25k": "終期紅利",
+    "death_total_usd_25k": "身故賠償總額",
+    "death_multiplier": "身故賠償倍數",
+    "source_id": "資料來源編號",
+    "filename": "檔案名稱",
+    "base_premium_usd": "官方基準保費（美元）",
+    "proposal_generator_version": "建議書產生器版本",
+    "table_type": "資料表類型",
+    "extraction_date": "擷取日期",
+    "status": "狀態",
+    "notes": "備註",
+    "dataset_name": "數據集名稱",
+    "dataset_version": "數據版本",
+    "schema_version": "架構版本",
+    "published_version": "已發布版本",
+    "source_sha": "資料指紋",
+    "published_at": "發布時間",
+    "published_by": "發布者",
+    "timestamp": "時間",
+    "admin_session_id": "管理員工作階段",
+    "operation": "操作",
+    "domain": "資料範圍",
+    "old_value": "原值",
+    "new_value": "新值",
+    "dataset_version_before": "修改前數據版本",
+    "dataset_version_after": "修改後數據版本"
+  },
+  "valueLabels": {
+    "gender": {"M": "男", "F": "女"},
+    "mode": {"immediate": "即期", "deferred": "5年延期"},
+    "source_type": {"OFFICIAL": "官方數據", "OFFICIAL_PARSED": "官方數據"},
+    "dataset_status": {"PREPARED": "已準備"},
+    "value_type": {"integer": "整數", "USD": "美元", "month": "月數", "percentage": "百分比", "scenario": "情境"},
+    "income_scenario": {"withdrawn_income": "支取每月入息"}
+  },
+  "configKeyLabels": {
+    "min_issue_age": "最小投保年齡",
+    "max_issue_age": "最大投保年齡",
+    "min_premium_usd": "最低保費（美元）",
+    "max_premium_usd": "最高保費（美元）",
+    "base_premium_usd": "官方基準保費（美元）",
+    "deferred_guaranteed_start_month": "延期保證收入開始月份",
+    "ng_income_start_month": "非保證收入開始月份",
+    "health_extra_percentage": "健康額外收入比例",
+    "health_extra_max_months": "健康額外收入最長月數",
+    "default_income_scenario": "預設收入情境"
+  }
+}

@@ -14,7 +14,7 @@ const release = JSON.parse(fs.readFileSync(path.join(root, "release.json"), "utf
 test("EverBliss GAS prepares seven Official-only Sheet tabs and public read operations", () => {
   for (const tab of ["ProductConfig", "IncomeRates", "SurrenderMultipliers", "DeathMultipliers", "OfficialSources", "DatasetMeta", "AuditLog"]) {
     assert.match(gas, new RegExp(`${tab}: \\[`));
-    assert.match(schema, new RegExp(`\\| ${tab} \\|`));
+    assert.ok(schema.includes(`| \`${tab}\` |`), `missing canonical tab ${tab} in the schema map`);
   }
   for (const action of ["getOfficialDataset", "getProductConfig", "getIncomeRates", "getSurrenderMultipliers", "getDeathMultipliers", "getDatasetMeta"]) assert.ok(gas.includes(action));
   assert.doesNotMatch(gas, /USER_OVERRIDE|userOverrides/i);
@@ -37,7 +37,9 @@ test("unprovisioned live connector remains explicit and fail-closed", async () =
   assert.match(gas, /EVERBLISS_SHEET_ID_NOT_CONFIGURED/);
   assert.match(gas, /AVA_PLATFORM_ADMIN_VERIFIER_NOT_CONFIGURED/);
   assert.doesNotMatch(gas, /https:\/\/script\.google\.com\/macros\/s\//);
-  assert.match(liveStatus, /0 live rows written/);
-  assert.match(liveStatus, /Not deployed/);
-  assert.match(liveStatus, /Not configured live/);
+  assert.match(liveStatus, /Created and populated/);
+  assert.match(liveStatus, /1,396/);
+  assert.match(liveStatus, /Runtime cloud Official read \| \*\*Not connected\*\*/);
+  assert.match(liveStatus, /not deployed/i);
+  assert.match(liveStatus, /AVA Admin verifier \/ live connector \| \*\*Not configured\*\*/);
 });
