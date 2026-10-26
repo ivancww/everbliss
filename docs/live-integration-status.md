@@ -37,7 +37,7 @@ Only a fully normalized and validated cloud payload is saved as LKG. Network err
 
 The endpoint remains centralized in the release/build configuration. GitHub Pages workflow reads the repository variable `EVERBLISS_OFFICIAL_ENDPOINT`, and `scripts/build.js` injects it into generated `dist/release.json`. The repository variable was set and read back on 2026-10-26 with the deployed `/exec` URL. Source `release.json` remains blank by design; a local build with the same endpoint passes injection verification.
 
-The live GAS endpoint was directly verified in the browser. An App runtime build running against the cloud endpoint was not hosted in a preview during this task, so an end-to-end browser runtime source badge / cloud calculation round-trip is **BROWSER QA PENDING**. Do not interpret live API validation and resolver unit tests as a deployed customer runtime test.
+The live GAS endpoint was directly verified in the browser. No Pages deployment or hosted App preview was run as part of this task; therefore the deployed App runtime source badge and cloud-backed customer calculation round-trip remain **BROWSER QA PENDING**. Do not interpret live API validation and resolver unit tests as a deployed customer runtime test.
 
 ## Admin security
 
