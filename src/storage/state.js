@@ -60,6 +60,23 @@ export async function saveUserOverrides(overrides) {
   return record;
 }
 
+export async function clearUserOverrides() {
+  try {
+    const db = await openDb();
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction(OVERRIDE_STORE, "readwrite");
+      tx.objectStore(OVERRIDE_STORE).delete(STATE_KEY);
+      tx.oncomplete = resolve;
+      tx.onerror = () => reject(tx.error || new Error("User Override reset failed"));
+    });
+    db.close();
+  } catch {
+    globalThis.localStorage?.removeItem(localKey("overrides"));
+  }
+  try { globalThis.localStorage?.removeItem(localKey("overrides")); } catch { /* User Override is already isolated in IndexedDB. */ }
+  return {};
+}
+
 export async function loadLastKnownGoodOfficial() {
   try { return (await requestValue(OFFICIAL_CACHE_STORE, "readonly", "get")) || null; }
   catch { return safeParse(globalThis.localStorage?.getItem(localKey("official-lkg"))); }

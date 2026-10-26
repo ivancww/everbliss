@@ -4,7 +4,8 @@ export const ADMIN_DOMAINS = Object.freeze([
   { id: "surrender", label: "退保乘數", sheet: "SurrenderMultipliers" },
   { id: "death", label: "身故乘數", sheet: "DeathMultipliers" },
   { id: "sources", label: "官方來源", sheet: "OfficialSources" },
-  { id: "dataset", label: "Dataset 狀態", sheet: "DatasetMeta" }
+  { id: "dataset", label: "數據版本／發布", sheet: "DatasetMeta" },
+  { id: "audit", label: "修改紀錄", sheet: "AuditLog" }
 ]);
 
 const EDITABLE_FIELDS = Object.freeze({
@@ -16,7 +17,7 @@ const EDITABLE_FIELDS = Object.freeze({
 });
 
 export function createAdminDraft(dataset) {
-  return { baseVersion: dataset?.datasetVersion || null, changes: [], state: "DRAFT" };
+  return { baseVersion: dataset?.datasetVersion || dataset?.datasetMeta?.dataset_version || null, changes: [], state: "DRAFT" };
 }
 
 export function addAdminDraftChange(draft, change) {

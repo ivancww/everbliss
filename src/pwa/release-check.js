@@ -11,12 +11,13 @@ export function claimForcedReload(targetBuild, currentBuild, storage) {
   return true;
 }
 
-export async function checkDeployedRelease({ current, registration, fetchImpl = globalThis.fetch, releaseUrl = "./release.json" } = {}) {
+export async function checkDeployedRelease({ current, registration, fetchImpl = globalThis.fetch, releaseUrl = "./release.json", onUpdateDetected } = {}) {
   try {
     const response = await fetchImpl(releaseUrl, { cache: "no-store" });
     if (!response.ok) return { checked: true, updateAvailable: false };
     const deployed = await response.json();
     if (!releaseDiffers(current, deployed)) return { checked: true, updateAvailable: false, deployed };
+    onUpdateDetected?.(deployed);
     await registration?.update?.();
     if (registration?.waiting) registration.waiting.postMessage({ type: "EVERBLISS_SKIP_WAITING" });
     return { checked: true, updateAvailable: true, deployed };
