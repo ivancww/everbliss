@@ -77,7 +77,7 @@ export function createInitialState() {
     page: "home", journeyStep: "concern", concern: null,
     desiredMonthlySpending: 0, existingStableIncome: 0,
     totalRetirementAssets: 0, liquidReserve: 0, liquidReserveMode: "amount", liquidReserveMonths: 12,
-    issueAge: 60, gender: "F", annuityAllocationHkd: 0, accumulation: "immediate",
+    issueAge: 60, gender: "F", premiumUsd: 25000, accumulation: "immediate",
     hkdPerUsd: "", selectedFeature: null,
     selectedOutcomeView: "income", selectedPolicyYear: 1,
     oala: { age: 65, household: "single", currentAssets: 0, currentMonthlyIncome: 0, annuityPremium: 0, annuityMonthlyIncome: 0, surrenderProceeds: 0 },
