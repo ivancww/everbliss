@@ -11,12 +11,11 @@ const schema = fs.readFileSync(path.join(root, "docs/google-sheet-gas-architectu
 const liveStatus = fs.readFileSync(path.join(root, "docs/live-integration-status.md"), "utf8");
 const release = JSON.parse(fs.readFileSync(path.join(root, "release.json"), "utf8"));
 
-test("EverBliss GAS prepares seven Official-only Sheet tabs and public read operations", () => {
-  for (const tab of ["ProductConfig", "IncomeRates", "SurrenderMultipliers", "DeathMultipliers", "OfficialSources", "DatasetMeta", "AuditLog"]) {
-    assert.match(gas, new RegExp(`${tab}: \\[`));
-    assert.ok(schema.includes(`| \`${tab}\` |`), `missing canonical tab ${tab} in the schema map`);
-  }
-  for (const action of ["getOfficialDataset", "getProductConfig", "getIncomeRates", "getSurrenderMultipliers", "getDeathMultipliers", "getDatasetMeta"]) assert.ok(gas.includes(action));
+test("GAS reads the production Chinese system tabs and exposes English canonical public actions", () => {
+  for (const tab of ["產品設定", "系統_每年收入回報率", "系統_退保價值倍數", "系統_身故賠償倍數", "系統_官方資料來源", "系統_數據版本", "系統_修改紀錄"]) assert.ok(gas.includes(tab), `missing deployed Sheet tab ${tab}`);
+  for (const action of ["health", "getOfficialDataset", "getProductConfig", "getIncomeRates", "getSurrenderMultipliers", "getDeathMultipliers", "getDatasetMeta"]) assert.ok(gas.includes(action));
+  assert.match(gas, /schemaVersion:EB\.SCHEMA_VERSION/);
+  assert.match(gas, /datasetName:'everbliss-official'/);
   assert.doesNotMatch(gas, /USER_OVERRIDE|userOverrides/i);
 });
 
@@ -25,10 +24,11 @@ test("GAS Admin mutation path is fail-closed, versioned, locked and audited", ()
   assert.match(gas, /expected_dataset_version/);
   assert.match(gas, /LockService\.getScriptLock\(\)/);
   assert.match(gas, /READ_AFTER_WRITE_FAILED/);
-  assert.match(gas, /sheet\.appendRow\(/);
+  assert.match(gas, /\.appendRow\(/);
   assert.match(gas, /FIELD_NOT_ALLOWED/);
   assert.match(gas, /OFFICIAL_SOURCE_REQUIRED/);
-  assert.doesNotMatch(gas, /password|secret|token/i);
+  assert.doesNotMatch(gas, /adminPassword|localAdminPassword|queryParam.*adminAuthorized/i);
+  assert.match(gas, /AVA_ADMIN_VERIFY_TOKEN/);
 });
 
 test("unprovisioned live connector remains explicit and fail-closed", async () => {
@@ -36,10 +36,18 @@ test("unprovisioned live connector remains explicit and fail-closed", async () =
   await assert.rejects(adminExchangeFromConfiguredEndpoint("")({}), /Admin Connector is not configured/);
   assert.match(gas, /EVERBLISS_SHEET_ID_NOT_CONFIGURED/);
   assert.match(gas, /AVA_PLATFORM_ADMIN_VERIFIER_NOT_CONFIGURED/);
-  assert.doesNotMatch(gas, /https:\/\/script\.google\.com\/macros\/s\//);
-  assert.match(liveStatus, /Created and populated/);
-  assert.match(liveStatus, /1,396/);
-  assert.match(liveStatus, /Runtime cloud Official read \| \*\*Not connected\*\*/);
-  assert.match(liveStatus, /not deployed/i);
-  assert.match(liveStatus, /AVA Admin verifier \/ live connector \| \*\*Not configured\*\*/);
+  assert.match(gas, /EVERBLISS_SHEET_ID/);
+  assert.match(liveStatus, /AVA - EverBliss/);
+  assert.match(liveStatus, /Canonical Data Pack v1/);
+  assert.match(liveStatus, /36 income anchors, 36 multiplier scenarios/);
+  assert.match(liveStatus, /AVA_ADMIN_VERIFY_URL/);
+  assert.match(liveStatus, /BROWSER QA PENDING/);
+});
+
+test("Pages build injects one canonical Official endpoint from the repository variable", () => {
+  const workflow = fs.readFileSync(path.join(root, ".github/workflows/pages.yml"), "utf8");
+  const build = fs.readFileSync(path.join(root, "scripts/build.js"), "utf8");
+  assert.match(workflow, /EVERBLISS_OFFICIAL_ENDPOINT:\s*\$\{\{ vars\.EVERBLISS_OFFICIAL_ENDPOINT \}\}/);
+  assert.match(build, /process\.env\.EVERBLISS_OFFICIAL_ENDPOINT/);
+  assert.equal(release.officialEndpoint, "", "the source release manifest remains environment-driven");
 });
