@@ -42,7 +42,8 @@ test("J06 exposes age, gender and HKD premium only", async () => {
   assert.ok(plan);
   assert.match(plan[1], /data-field="issueAge"/);
   assert.match(plan[1], /data-field="gender"/);
-  assert.match(plan[1], /numberField\("premiumHkd","投入年金保費（HKD）"/);
+  assert.match(plan[1], /numberField\("premiumHkd",html\(p\["j06\.premiumLabel"\]\)/);
+  const presentation = await fs.readFile(path.join(root, "src/data/presentation/user-config.js"), "utf8");assert.match(presentation, /"j06.premiumLabel": "投入年金保費（HKD）"/);
   assert.doesNotMatch(plan[1], /hkdPerUsd|HKD per USD|匯率/);
   assert.equal((source.match(/annuityAllocationHkd/g) || []).length, 1);
   assert.match(source, /premiumUsd:validation\.premiumUsd/);

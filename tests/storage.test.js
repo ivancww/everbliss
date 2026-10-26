@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createInitialState, loadAppState, loadLastKnownGoodOfficial, loadLastKnownGoodProductConfig, loadUserOverrides, saveAppState, saveLastKnownGoodOfficial, saveLastKnownGoodProductConfig, saveUserOverrides } from "../src/storage/state.js";
+import { createInitialState, loadAppState, loadLastKnownGoodOfficial, loadLastKnownGoodProductConfig, loadUserOverrides, clearUserOverrides, saveAppState, saveLastKnownGoodOfficial, saveLastKnownGoodProductConfig, saveUserOverrides } from "../src/storage/state.js";
 
 function memoryStorage(){const values=new Map();return {getItem:k=>values.has(k)?values.get(k):null,setItem:(k,v)=>values.set(k,String(v)),removeItem:k=>values.delete(k),clear:()=>values.clear(),keys:()=>[...values.keys()]};}
 test("journey inputs and current route restore from Local-first state",async()=>{
@@ -22,4 +22,9 @@ test("selected annual outcome view and policy year are included in persisted app
 test("User overrides persist separately and do not replace Official or customer state",async()=>{
   const old=globalThis.localStorage;globalThis.localStorage=memoryStorage();
   try{await saveAppState({...createInitialState(),page:"health"});await saveUserOverrides({heroTitle:"我的退休現金流"});const state=await loadAppState();const override=await loadUserOverrides();assert.equal(state.page,"health");assert.equal(override.heroTitle,"我的退休現金流");assert.equal(override.metadata.layer,"USER_OVERRIDE");assert.deepEqual(globalThis.localStorage.keys().sort(),["ava:everbliss:overrides:v1","ava:everbliss:state:v1"]);}finally{if(old===undefined)delete globalThis.localStorage;else globalThis.localStorage=old;}
+});
+
+test("clearing User Override leaves customer state and Official LKG intact",async()=>{
+  const old=globalThis.localStorage;globalThis.localStorage=memoryStorage();
+  try{await saveAppState({...createInitialState(),page:"result"});await saveLastKnownGoodOfficial({datasetVersion:"official-v5"});await saveUserOverrides({schema:"everbliss-user-config-v1",values:{"home.heroTitle":"Custom"}});await clearUserOverrides();assert.deepEqual(await loadUserOverrides(),{});assert.equal((await loadAppState()).page,"result");assert.equal((await loadLastKnownGoodOfficial()).datasetVersion,"official-v5");assert.deepEqual(globalThis.localStorage.keys().sort(),["ava:everbliss:official-lkg:v1","ava:everbliss:state:v1"]);}finally{if(old===undefined)delete globalThis.localStorage;else globalThis.localStorage=old;}
 });

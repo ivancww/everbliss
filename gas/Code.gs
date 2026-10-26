@@ -153,7 +153,8 @@ function requireAdmin_(body) {
   const id=String(body.session||''), raw=id&&CacheService.getScriptCache().get('admin:'+id); if(!raw) throw Error('ADMIN_SESSION_REQUIRED');
   const s=JSON.parse(raw); if(s.appId!==EB.APP_ID||new Date(s.expiresAt).getTime()<=Date.now()) throw Error('ADMIN_SESSION_INVALID'); return s;
 }
-function adminGetDataset_(body) { const s=requireAdmin_(body); return {success:true,appId:EB.APP_ID,adminAuthorized:true,sessionExpiresAt:s.expiresAt,dataset:{productConfig:readProductConfig_(),incomeRates:readIncomeRates_(),surrenderMultipliers:readSurrender_(),deathMultipliers:readDeath_(),officialSources:readSources_(),datasetMeta:readDatasetMeta_()}}; }
+function adminGetDataset_(body) { const s=requireAdmin_(body); return {success:true,appId:EB.APP_ID,adminAuthorized:true,sessionExpiresAt:s.expiresAt,dataset:{productConfig:readProductConfig_(),incomeRates:readIncomeRates_(),surrenderMultipliers:readSurrender_(),deathMultipliers:readDeath_(),officialSources:readSources_(),datasetMeta:readDatasetMeta_(),auditLog:readAuditLog_()}}; }
+function readAuditLog_() { const sh=requireSheet_(EB.SHEETS.AUDIT), rows=sh.getDataRange().getValues().slice(1).filter(r=>r.some(v=>v!==''&&v!==null)).slice(-200); return rows.map(r=>({timestamp:text_(r[0]),admin_session_id:text_(r[1]),operation:text_(r[2]),domain:text_(r[3]),record_id:text_(r[4]),old_value:text_(r[5]),new_value:text_(r[6]),dataset_version_before:text_(r[7]),dataset_version_after:text_(r[8]),source_sha:text_(r[9])})); }
 function adminPublish_(body) { const s=requireAdmin_(body); return withLock_(()=>publish_(body,s)); }
 function publish_(body,session) {
   const meta=readDatasetMeta_(); if(String(body.expected_dataset_version)!==String(meta.dataset_version)) return {success:false,status:'CONFLICT',currentDatasetVersion:meta.dataset_version};

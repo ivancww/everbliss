@@ -25,11 +25,11 @@ function harness(buildId,cachesMap,posted,indexedDBRef,fetchImpl=globalThis.fetc
 }
 async function runLifecycle(h,kind){let promise;h.handlers[kind]({waitUntil:p=>{promise=p;}});await promise;}
 
-test("v0.2.0 shell loads and build stamps a unique deployment identifier",()=>{
-  return fs.readFile(path.join(root,"release.json"),"utf8").then(async raw=>{const release=JSON.parse(raw);assert.equal(release.version,"v0.2.0");
+test("v0.3.0 shell loads and build stamps a unique deployment identifier",()=>{
+  return fs.readFile(path.join(root,"release.json"),"utf8").then(async raw=>{const release=JSON.parse(raw);assert.equal(release.version,"v0.3.0");
   const built=execFileSync(process.execPath,[path.join(root,"scripts/build.js")],{cwd:root,env:{...process.env,GITHUB_SHA:"test-sha-001"},encoding:"utf8"});
-  assert.match(built,/Built EverBliss v0\.2\.0 \(test-sha-001\)/);
-  const [sw,meta,index,info]=await Promise.all([fs.readFile(path.join(root,"dist/sw.js"),"utf8"),fs.readFile(path.join(root,"dist/release.json"),"utf8"),fs.readFile(path.join(root,"dist/index.html"),"utf8"),fs.readFile(path.join(root,"dist/build-info.js"),"utf8")]);assert.match(sw,/const BUILD_ID = "test-sha-001"/);assert.equal(JSON.parse(meta).buildId,"test-sha-001");assert.match(index,/<small id="app-version">v0\.2\.0<\/small>/);assert.match(info,/"version":"v0\.2\.0"/);});
+  assert.match(built,/Built EverBliss v0\.3\.0 \(test-sha-001\)/);
+  const [sw,meta,index,info]=await Promise.all([fs.readFile(path.join(root,"dist/sw.js"),"utf8"),fs.readFile(path.join(root,"dist/release.json"),"utf8"),fs.readFile(path.join(root,"dist/index.html"),"utf8"),fs.readFile(path.join(root,"dist/build-info.js"),"utf8")]);assert.match(sw,/const BUILD_ID = "test-sha-001"/);assert.equal(JSON.parse(meta).buildId,"test-sha-001");assert.match(index,/<small id="app-version">v0\.3\.0<\/small>/);assert.match(info,/"version":"v0\.3\.0"/);});
 });
 
 test("next deployment changes the worker, stages new shell, activates it and safely retires prior shell",async()=>{
@@ -74,12 +74,12 @@ test("customer first paint completes before cloud Official and Product Config re
 });
 
 test("release checks bypass cache and detect version or build changes",async()=>{
-  assert.equal(releaseDiffers({version:"v0.2.0",buildId:"a"},{version:"v0.2.0",buildId:"a"}),false);
-  assert.equal(releaseDiffers({version:"v0.2.0",buildId:"a"},{version:"v0.2.1",buildId:"b"}),true);
-  assert.equal(releaseDiffers({version:"v0.2.0",buildId:"a"},{version:"v0.2.0",buildId:"b"}),true);
-  let options;let updates=0;
-  const result=await checkDeployedRelease({current:{version:"v0.2.0",buildId:"a"},registration:{update:async()=>{updates++;}},fetchImpl:async(_url,init)=>{options=init;return{ok:true,json:async()=>({version:"v0.2.1",buildId:"b"})};}});
-  assert.equal(options.cache,"no-store");assert.equal(result.updateAvailable,true);assert.equal(updates,1);
+  assert.equal(releaseDiffers({version:"v0.3.0",buildId:"a"},{version:"v0.3.0",buildId:"a"}),false);
+  assert.equal(releaseDiffers({version:"v0.3.0",buildId:"a"},{version:"v0.2.1",buildId:"b"}),true);
+  assert.equal(releaseDiffers({version:"v0.3.0",buildId:"a"},{version:"v0.3.0",buildId:"b"}),true);
+  let options;let updates=0;let notified="";
+  const result=await checkDeployedRelease({current:{version:"v0.3.0",buildId:"a"},registration:{update:async()=>{updates++;}},onUpdateDetected:deployed=>{notified=deployed.buildId;},fetchImpl:async(_url,init)=>{options=init;return{ok:true,json:async()=>({version:"v0.2.1",buildId:"b"})};}});
+  assert.equal(options.cache,"no-store");assert.equal(result.updateAvailable,true);assert.equal(updates,1);assert.equal(notified,"b");
 });
 
 test("forced update reloads once for the target build and skips the already-current build",()=>{
