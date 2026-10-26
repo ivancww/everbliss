@@ -54,10 +54,10 @@ test("RetireSmart is identified as non-contractual with verified provider and fe
   const source=fs.readFileSync(path.join(root,"src/app/main.js"),"utf8");
   assert.match(source,/非保單合約利益/);assert.match(source,/指定獨立第三方服務供應商/);assert.match(source,/直接向服務供應商付款/);assert.match(source,/暫停或終止/);
 });
-test("result rendering leads with guaranteed first-phase HKD income and keeps Year 8 secondary",()=>{
+test("result rendering keeps the first guaranteed phase primary and supports configured HKD display",()=>{
   const source=fs.readFileSync(path.join(root,"src/app/main.js"),"utf8");
   assert.match(source,/function renderResult\(\)/);assert.match(source,/data-outcome/);assert.match(source,/data-year/);
-  assert.match(source,/calculateOutcome\(/);assert.match(source,/每年領取/);assert.match(source,/退保價值/);assert.match(source,/身故賠償/);
+  assert.match(source,/calculateOutcome\(/);assert.match(source,/premiumUsd:n\(state\.premiumUsd\)/);assert.match(source,/formatOutcomeAmount\(value,fx\)/);assert.match(source,/每年領取/);assert.match(source,/退保價值/);assert.match(source,/身故賠償/);
   assert.doesNotMatch(source,/renderResult=correctedRenderResult/);
 });
 test("release version has one canonical source and matches visible label contract",()=>{

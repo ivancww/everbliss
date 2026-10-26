@@ -2,7 +2,7 @@
 const BUILD_ID = "__BUILD_ID__";
 const CACHE_PREFIX = "everbliss-shell-";
 const CACHE_NAME = `${CACHE_PREFIX}${BUILD_ID}`;
-const SHELL_FILES = ["./", "./index.html", "./manifest.webmanifest", "./release.json", "./src/ui/tokens.css", "./src/ui/styles.css", "./src/app/main.js", "./src/admin/admin-auth.js", "./src/admin/admin-view.js", "./src/admin/admin-workflow.js", "./src/calculations/engine.js", "./src/calculations/full-outcomes.js", "./src/data/official/income-rates.js", "./src/data/official/official-multipliers.js", "./src/data/official/official-dataset.js", "./src/data/official/everbliss-anchors.js", "./src/data/government/oala.js", "./src/data/metadata/app-config.js", "./src/storage/state.js", "./assets/everbliss.svg"];
+const SHELL_FILES = ["./", "./index.html", "./manifest.webmanifest", "./release.json", "./src/ui/tokens.css", "./src/ui/styles.css", "./src/app/main.js", "./src/app/plan-input.js", "./src/admin/admin-auth.js", "./src/admin/admin-view.js", "./src/admin/admin-workflow.js", "./src/calculations/engine.js", "./src/calculations/full-outcomes.js", "./src/data/official/income-rates.js", "./src/data/official/official-multipliers.js", "./src/data/official/official-dataset.js", "./src/data/official/everbliss-anchors.js", "./src/data/government/oala.js", "./src/data/metadata/app-config.js", "./src/storage/state.js", "./assets/everbliss.svg"];
 
 self.addEventListener("install", event => {
   event.waitUntil((async () => {

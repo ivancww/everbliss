@@ -50,13 +50,13 @@ test("journey and local storage survive an automatic shell transition",async()=>
   globalThis.localStorage={getItem:key=>values.get(key)||null,setItem:(key,value)=>values.set(key,String(value))};
   globalThis.indexedDB={deleteDatabase(){deleteDatabaseCalls++;throw new Error("must not delete app data");}};
   try{
-    await saveAppState({...createInitialState(),page:"result",journeyStep:"result",issueAge:50,annuityAllocationHkd:195000});
+    await saveAppState({...createInitialState(),page:"result",journeyStep:"result",issueAge:50,premiumUsd:50000});
     const cachesMap=new Map();const messages=[];const db={
       deleteDatabase(){deleteDatabaseCalls++;throw new Error("must not delete app data");}
     };
     await runLifecycle(harness("before",cachesMap,messages,db),"install");await runLifecycle(harness("before",cachesMap,messages,db),"activate");
     await runLifecycle(harness("after",cachesMap,messages,db),"install");await runLifecycle(harness("after",cachesMap,messages,db),"activate");
-    const restored=await loadAppState();assert.equal(restored.page,"result");assert.equal(restored.issueAge,50);assert.equal(restored.annuityAllocationHkd,195000);assert.equal(deleteDatabaseCalls,0);
+    const restored=await loadAppState();assert.equal(restored.page,"result");assert.equal(restored.issueAge,50);assert.equal(restored.premiumUsd,50000);assert.equal(deleteDatabaseCalls,0);
   }finally{if(oldStorage===undefined)delete globalThis.localStorage;else globalThis.localStorage=oldStorage;if(oldIndexedDB===undefined)delete globalThis.indexedDB;else globalThis.indexedDB=oldIndexedDB;}
 });
 
@@ -66,6 +66,7 @@ test("browser and installed-PWA entry share the App Service Worker update lifecy
 });
 
 test("updated Official age data remains in the staged PWA shell",()=>{
+  assert.match(template,/\.\/src\/app\/plan-input\.js/);
   assert.match(template,/\.\/src\/data\/official\/everbliss-anchors\.js/);
   assert.match(template,/\.\/src\/calculations\/full-outcomes\.js/);
   assert.match(template,/\.\/src\/data\/official\/income-rates\.js/);
