@@ -24,7 +24,11 @@ test("GAS Admin mutation path is fail-closed, versioned, locked and audited", ()
   assert.match(gas, /expected_dataset_version/);
   assert.match(gas, /LockService\.getScriptLock\(\)/);
   assert.match(gas, /READ_AFTER_WRITE_FAILED/);
-  assert.match(gas, /\.appendRow\(/);
+  assert.match(gas, /setValues\(hiddenRows\)/);
+  assert.match(gas, /setValues\(visibleRows\)/);
+  assert.doesNotMatch(gas, /\.appendRow\(/);
+  assert.match(gas, /ROLLBACK_VERIFICATION_FAILED/);
+  assert.match(gas, /publish:'\+c\.field/);
   assert.match(gas, /FIELD_NOT_ALLOWED/);
   assert.match(gas, /OFFICIAL_SOURCE_REQUIRED/);
   assert.doesNotMatch(gas, /adminPassword|localAdminPassword|queryParam.*adminAuthorized/i);
