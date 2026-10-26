@@ -39,6 +39,7 @@ const CONFIG = Object.freeze({
   min_issue_age:['最小投保年齡','number'], max_issue_age:['最大投保年齡','number'],
   min_premium_usd:['最低保費（美元）','number'], max_premium_usd:['最高保費（美元）','number'],
   base_premium_usd:['官方計算基準保費','number'],
+  hkd_per_usd_calculation_rate:['港元兌美元試算換算率','number'],
   deferred_guaranteed_start_month:['延期保證收入開始','numberFromText'],
   ng_income_start_month:['非保證收入開始','numberFromText'],
   health_extra_percentage:['健康額外收入比例','number'],

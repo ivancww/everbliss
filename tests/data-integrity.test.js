@@ -29,7 +29,7 @@ test("interpolated income identifies its Official surrounding anchors and does n
   assert.equal(calculateEverBliss({issueAge:71,gender:"M",accumulation:"immediate",premiumUsd:25000}).available,false);
 });
 test("Government data carries current effective date and official source metadata",()=>{
-  assert.equal(oalaData.effectiveDate,"2026-02-01");assert.equal(oalaData.verifiedDate,"2026-10-21");
+  assert.equal(oalaData.effectiveDate,"2026-02-01");assert.equal(oalaData.verifiedDate,"2026-10-26");
   assert.ok(oalaData.sourceUrl.includes("swd.gov.hk"));assert.ok(oalaData.limitsSourceUrl.includes("swd.gov.hk"));assert.ok(oalaData.paymentSourceUrl.includes("swd.gov.hk"));
 });
 test("HK Annuity comparison is hidden by default and remains a separate optional page",()=>{
@@ -47,7 +47,7 @@ test("feature hub and Return to AVA remain part of the shell",()=>{
 });
 test("OALA page uses conditional rule framing and keeps asset and income results separate",()=>{
   const source=fs.readFileSync(path.join(root,"src/app/main.js"),"utf8");
-  assert.match(source,/只按社署目前公開的市場年金處理原則作初步估算/);assert.match(source,/最終由社會福利署按當時政策審批/);
+  assert.match(source,/只按社署現行公開的市場年金處理原則作初步估算/);assert.match(source,/最終由社會福利署按當時政策審批/);
   assert.match(source,/資產審查/);assert.match(source,/入息審查/);assert.doesNotMatch(source,/政府已確認合資格/);
 });
 test("RetireSmart is identified as non-contractual with verified provider and fee caveats",()=>{
@@ -56,8 +56,8 @@ test("RetireSmart is identified as non-contractual with verified provider and fe
 });
 test("result rendering keeps the first guaranteed phase primary and supports configured HKD display",()=>{
   const source=fs.readFileSync(path.join(root,"src/app/main.js"),"utf8");
-  assert.match(source,/function renderResult\(\)/);assert.match(source,/data-outcome/);assert.match(source,/data-year/);
-  assert.match(source,/calculateOutcome\(/);assert.match(source,/premiumUsd:n\(state\.premiumUsd\)/);assert.match(source,/formatOutcomeAmount\(value,fx\)/);assert.match(source,/每年領取/);assert.match(source,/退保價值/);assert.match(source,/身故賠償/);
+  assert.match(source,/function renderResult\(\)/);assert.match(source,/data-outcome/);assert.match(source,/data-policy-year-slider/);
+  assert.match(source,/calculateOutcome\(/);assert.match(source,/premiumUsd:validation\.premiumUsd/);assert.match(source,/formatOutcomeAmount\(raw,fx\)/);assert.match(source,/每年領取/);assert.match(source,/退保價值/);assert.match(source,/身故賠償/);
   assert.doesNotMatch(source,/renderResult=correctedRenderResult/);
 });
 test("release version has one canonical source and matches visible label contract",()=>{
