@@ -43,4 +43,13 @@ Live API verification on 2026-10-26 confirmed `health`, `getDatasetMeta` (`PUBLI
 
 ## Admin security
 
-The GAS Admin exchange requires AVA Platform proof and fails closed when `AVA_ADMIN_VERIFY_URL` is absent. `AVA_ADMIN_VERIFY_TOKEN` is server-to-server configuration, not an Admin password. The App Admin route still requires the AVA launch proof; no second password, query-parameter grant, or local authorization bypass was added. No AVA Platform change or production GAS deployment was made in this sync. The Sheet Product Config FX row predates this task; no Official income, surrender, or death data was changed.
+EverBliss repository GAS is aligned in this branch to the current Platform `ava-admin-session-v1` protocol. It requires the Script Property `AVA_PLATFORM_ADMIN_ENDPOINT` set to the current AVA Platform GAS Web App URL; it does not require the obsolete `AVA_ADMIN_VERIFY_URL` or `AVA_ADMIN_VERIFY_TOKEN`. The App server exchanges the one-time App-bound ticket, nonce and browser proof with Platform GAS, retains the signed `adminSessionProof` server-side, and calls `verifyAdminSession` for each `official-read` and `official-write` operation. The browser receives only a short-lived opaque EverBliss session ID. Platform logout/revocation is enforced by remote verification.
+
+This repository update did not modify AVA Platform, deploy either GAS project, or configure EverBliss Script Properties. The currently deployed EverBliss GAS version and Script Property state were not independently accessible in this task. Therefore Admin remains **BLOCKED** until this `gas/Code.gs` is deployed to the existing GAS project, `AVA_PLATFORM_ADMIN_ENDPOINT` is configured, Platform's existing `AVA_ADMIN_APP_IDS` property includes `everbliss`, and a live AVA Studio-to-EverBliss proof/read round-trip passes. No Admin password or URL authorization was added. No Official calculation data was changed.
+
+
+## Mother Rules User / Admin alignment branch
+
+`?avaEntry=user` now selects the same Frontstage page renderer as Front. User entry enables in-place editing of allowlisted presentation content and associated visibility/order controls. Preview renders pending overrides without edit controls; Return to Edit preserves them; Save Local writes only the versioned User Override store and returns to normal Frontstage. User settings remain isolated from customer state, Official/LKG data, Product Config, and Admin draft state.
+
+The change targets release `v0.4.0`. Live Pages deployment and live same-Frontstage User persistence QA are not available before merge/deployment, so Mother Rules User readiness remains **NOT READY / NOT LIVE VERIFIED**. Admin backend source is updated but production GAS and Platform live proof are not verified; Admin remains **BLOCKED**.
