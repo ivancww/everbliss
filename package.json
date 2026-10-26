@@ -1,0 +1,11 @@
+{
+  "name": "ava-everbliss",
+  "private": true,
+  "type": "module",
+  "description": "AVA EverBliss retirement cashflow journey",
+  "scripts": {
+    "build": "node scripts/build.js",
+    "test": "node --test tests/*.test.js",
+    "serve": "node scripts/serve.js"
+  }
+}

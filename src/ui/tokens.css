@@ -1,0 +1,33 @@
+/* AVA Design System semantic roles; App composition uses these shared values. */
+:root {
+  --ava-color-background: #f6f8fb;
+  --ava-color-surface: #ffffff;
+  --ava-color-primary: #1e3a8a;
+  --ava-color-primary-hover: #172f70;
+  --ava-color-secondary: #2563eb;
+  --ava-color-text: #172033;
+  --ava-color-text-secondary: #475569;
+  --ava-color-text-muted: #64748b;
+  --ava-color-border: #e7ebf1;
+  --ava-color-control-border: #64748b;
+  --ava-color-selected: #eff6ff;
+  --ava-color-pressed: #dbeafe;
+  --ava-color-focus: #2563eb;
+  --ava-color-on-primary: #ffffff;
+  --ava-color-success: #047857;
+  --ava-color-success-soft: #ecfdf5;
+  --ava-color-warning: #92400e;
+  --ava-color-warning-soft: #fffbeb;
+  --ava-color-error: #dc2626;
+  --ava-color-error-soft: #fef2f2;
+  --ava-color-disabled: #e2e8f0;
+  --ava-radius-card: 16px;
+  --ava-radius-control: 10px;
+  --ava-gap-component: 12px;
+  --ava-gap-section: 28px;
+  --ava-card-padding: 20px;
+  --ava-shadow-card: 0 12px 35px color-mix(in srgb, var(--ava-color-text) 7%, transparent);
+  --ava-shadow-dialog: 0 25px 80px color-mix(in srgb, var(--ava-color-text) 25%, transparent);
+  --ava-scrim: color-mix(in srgb, var(--ava-color-text) 45%, transparent);
+  --ava-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang HK", "Noto Sans TC", sans-serif;
+}
