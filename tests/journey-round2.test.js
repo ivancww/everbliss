@@ -56,6 +56,18 @@ test("J02, J03, OALA and J07 presentation contracts remain in the single frontst
   assert.match(source, /updateLiquiditySummary\(\)/);
   assert.match(source, /已包括第8年起額外每月收入/);
   assert.doesNotMatch(source, /year-chip|數據來源|插值錨點|premium scaling|Official anchor/i);
+  const timing = source.slice(source.indexOf("function renderTiming()"), source.indexOf("function renderSummary()"));
+  const resultCard = source.slice(source.indexOf("function resultPhase("), source.indexOf("function renderSummary()"));
+  const summary = source.slice(source.indexOf("function renderSummary()"), source.indexOf("function renderHome()"));
+  assert.doesNotMatch(timing, /非保證每月收入|非保證入息/);
+  assert.match(timing, /第85個月起可加入額外每月收入/);
+  assert.match(resultCard, /每月收入 \+ 額外每月收入/);
+  assert.match(resultCard, /已包括第8年起額外每月收入/);
+  assert.match(resultCard, /額外收入並非保證，實際金額可能較高、較低，甚至為零。/);
+  assert.doesNotMatch(resultCard, /非保證入息|利息/);
+  assert.match(summary, /第8年起可加入額外每月收入/);
+  assert.match(summary, /額外收入並非保證，實際金額可能較高、較低，甚至為零。/);
+  assert.doesNotMatch(summary, /非保證入息|利息/);
   assert.match(shell, /src\/app\/journey-model\.js/);
   assert.match(shell, /src\/data\/official\/product-config\.js/);
   assert.match(await fs.readFile(path.join(root, "src/ui/styles.css"), "utf8"), /touch-action:pan-y/);
