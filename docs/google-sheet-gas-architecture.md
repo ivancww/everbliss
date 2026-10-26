@@ -1,6 +1,6 @@
 # EverBliss Official Google Sheet and GAS architecture
 
-The native Official data Sheet was created and populated on **2026-10-23** as **優悅年金 EverBliss｜官方數據庫**. Spreadsheet ID: `1BwXsIQ8bTxGo-91vgaackwQwYJBEHn8f_eL4hXjhY3k`; URL: https://docs.google.com/spreadsheets/d/1BwXsIQ8bTxGo-91vgaackwQwYJBEHn8f_eL4hXjhY3k/edit. This is a prepared data-management source; EverBliss runtime is **not** reading it live. No GAS project or Web App deployment was created. Until a separately authorized GAS deployment is configured, the verified bundled Official release snapshot remains the runtime fallback.
+The native Official data Sheet is **AVA - EverBliss**, ID `1BwXsIQ8bTxGo-91vgaackwQwYJBEHn8f_eL4hXjhY3k`; URL: https://docs.google.com/spreadsheets/d/1BwXsIQ8bTxGo-91vgaackwQwYJBEHn8f_eL4hXjhY3k/edit. A production GAS Web App is deployed at `https://script.google.com/macros/s/AKfycbw0tTMX_iTEYS1uK9X0TkP8wEgF9wP4j8q4ch2pMfFLjN88JyMt4e2i4_g9WJdRY4r-zA/exec`; the Official dataset is `PUBLISHED`. The endpoint and Sheet were verified 2026-10-26. Runtime resolution uses valid cloud Official → Last Known Good → bundled verified fallback. The Sheet and GAS remain App-owned; this PR does not deploy or modify either production resource.
 
 The stored dataset is **Canonical Data Pack v1**, schema version `1`, with source fingerprint `10d6e280f67955e62e1f25df9ca95f64b9ea6233342a59e5d20758a6f807a4a0`. The fingerprint is SHA-256 over the two frozen inputs, including each repository-relative filename and a NUL separator: `src/data/official/everbliss-income-rates-50-75.json` and `src/data/official/everbliss-official-parsed-multipliers.json`.
 
@@ -26,7 +26,7 @@ The Sheet contains **36** Official parsed proposal scenarios, **36** exact Offic
 
 The frozen customer calculation bundle was not changed. Its 55M deferred income-rate record is still marked `INTERPOLATED`; the Sheet's direct proposal anchor is Official source data but is not read by the App until a separately reviewed data-release/runtime integration updates that snapshot.
 
-The tabs have Chinese display names and headers, `zh_TW` locale, Hong Kong time zone, frozen header rows, hidden gridlines, filters, readable column sizing, wrapped source names, percentage formats, and five-decimal multiplier formats. The Sheet was read back after import: all seven tab names and mapped headers match the central schema. Reconciliation found zero surrender multiplier discrepancies and zero death multiplier discrepancies. Death component totals differ by **US$1** only for 75-year-old female deferred Years 22 and 23, matching the accepted Official whole-dollar component-rounding cases. See `docs/live-integration-status.md` for read-back sample values and runtime status.
+The visible Chinese tabs are `產品設定`, `官方產品數據`, `官方資料來源`, `Workflow`, `數據版本`, `修改紀錄`; hidden machine tabs are `系統_每年收入回報率`, `系統_退保價值倍數`, `系統_身故賠償倍數`, `系統_官方資料來源`, `系統_數據版本`, `系統_修改紀錄`. The GAS source reads the hidden system tabs and translates headers through the canonical-English-to-Chinese mapping in `gas/Code.gs`; API/business logic keys stay English. The current live data has 36 income anchors, 36 scenarios and 1,396 surrender/death year records each. The published API read-back is documented in `docs/live-integration-status.md`.
 
 User Override is stored only in the App's local `userOverrides` store and has no Sheet tab or GAS upload endpoint.
 
@@ -36,12 +36,12 @@ User Override is stored only in the App's local `userOverrides` store and has no
 
 Cloud payloads are rejected unless schema, dataset version, complete 104-row income coverage, all Official multiplier anchors, continuous annual rows, finite surrender/death multipliers, and attained-age-100 endpoints validate. A rejected payload never replaces LKG.
 
-## GAS endpoints prepared in `gas/Code.gs`
+## GAS endpoints in `gas/Code.gs`
 
-Public reads: `getOfficialDataset`, `getProductConfig`, `getIncomeRates`, `getSurrenderMultipliers`, `getDeathMultipliers`, `getDatasetMeta`.
+Public reads: `health`, `getOfficialDataset`, `getProductConfig`, `getIncomeRates`, `getSurrenderMultipliers`, `getDeathMultipliers`, `getDatasetMeta`.
 
 Admin operations: `getAdminOfficialDataset`, `upsertIncomeRate`, `upsertSurrenderMultiplier`, `upsertDeathMultiplier`, `upsertProductConfig`, `publishDataset`. Mutations require an Admin session after AVA Platform proof verification, operation allowlisting, schema validation, expected dataset version, ScriptLock, record and dataset version increments, read-after-write verification, and append-only audit. The verifier fails closed until the exact AVA Platform production exchange contract and deployment properties are wired; no password or local-only Admin grant is provided.
 
 ## Deployment gates
 
-Before cloud data can be called the runtime source of truth, an owner must configure the recorded Sheet ID and exact production origins as Script Properties, implement the verified AVA Platform `ava-admin-session-v1` server exchange, create/deploy the GAS Web App, verify GET/POST behavior, and record deployed source equivalence. The Sheet is populated, but no production GAS project, deployment, or Script Properties are configured. Do not treat the Sheet's existence as a live runtime connection.
+The production Web App and Sheet are live and public Official reads are verified. Runtime deployment obtains the endpoint through the GitHub Actions repository variable `EVERBLISS_OFFICIAL_ENDPOINT`; source `release.json` intentionally remains blank and build-time injection writes the endpoint only to `dist/release.json`. Configure that Actions variable with the deployed `/exec` URL before a Pages deployment. Admin remains fail-closed until `AVA_ADMIN_VERIFY_URL` and, where required, `AVA_ADMIN_VERIFY_TOKEN` are configured in GAS Script Properties. Those are server-side integration properties, not user credentials. Live resource verification does not assert that the Pages repository variable was configured.
