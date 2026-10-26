@@ -1,0 +1,27 @@
+name: Validate EverBliss release contract
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm test
+      - run: npm run build
+        env:
+          GITHUB_SHA: ${{ github.sha }}
+          EVERBLISS_OFFICIAL_ENDPOINT: ${{ vars.EVERBLISS_OFFICIAL_ENDPOINT }}
+      - name: Check semantic version and generated artifacts
+        run: node scripts/validate-release.js --base origin/main
+        env:
+          EVERBLISS_OFFICIAL_ENDPOINT: ${{ vars.EVERBLISS_OFFICIAL_ENDPOINT }}
