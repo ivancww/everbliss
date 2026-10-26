@@ -2,14 +2,16 @@ import { evaluateOala } from "../calculations/engine.js";
 import { calculateOutcome, setOfficialCalculationDataset } from "../calculations/full-outcomes.js";
 import { oalaData } from "../data/government/oala.js";
 import { appDefaults, appCapabilities, fxConfig } from "../data/metadata/app-config.js";
-import { createInitialState, loadAppState, loadLastKnownGoodOfficial, loadUserOverrides, saveAppState, saveLastKnownGoodOfficial, saveUserOverrides } from "../storage/state.js";
+import { createInitialState, loadAppState, loadLastKnownGoodOfficial, loadLastKnownGoodProductConfig, loadUserOverrides, saveAppState, saveLastKnownGoodOfficial, saveLastKnownGoodProductConfig, saveUserOverrides } from "../storage/state.js";
 import { adminExchangeFromConfiguredEndpoint, establishAdminSession, receiveAdminProof } from "../admin/admin-auth.js";
 import { renderAdminSurface } from "../admin/admin-view.js";
 import { addAdminDraftChange, createAdminDraft, publishAdminDraft } from "../admin/admin-workflow.js";
-import { resolveOfficialDataset } from "../data/official/official-dataset.js";
+import { resolveLocalOfficialDataset, resolveOfficialDataset } from "../data/official/official-dataset.js";
 import { formatOutcomeAmount, restorePlanInputs, validatePlanPremiumHkd } from "./plan-input.js";
-import { resolveProductConfig } from "../data/official/product-config.js";
+import { resolveLocalProductConfig, resolveProductConfig } from "../data/official/product-config.js";
 import { oalaScenarioValues, reserveSummary, retirementGap } from "./journey-model.js";
+import { startLocalFirst } from "./local-first-startup.js";
+import { checkDeployedRelease, claimForcedReload } from "../pwa/release-check.js";
 
 const root = document.querySelector("#app");
 const dialog = document.querySelector("#notice-dialog");
@@ -37,6 +39,7 @@ let adminDraftError = "";
 let officialEndpoint = "";
 let runtimeHkdPerUsd = fxConfig.rate;
 let scenarioReady = false;
+const scheduleAfterPaint=callback=>typeof requestAnimationFrame==="function"?requestAnimationFrame(()=>setTimeout(callback,0)):setTimeout(callback,0);
 
 async function persist() { state = await saveAppState(state); }
 function setPage(page) { state.page = page; state.journeyStep = stepOrder.includes(page) ? page : state.journeyStep; persist(); render(); window.scrollTo({ top: 0, behavior: "smooth" }); }
@@ -89,7 +92,7 @@ function oalaMoneyField(id,key,label,value,hint=""){return `<div class="field"><
 function getOalaLinkedValues(){if(!scenarioReady)return null;const calc=getCalc();if(!calc.available)return null;const outcome=calculateOutcome({issueAge:n(state.issueAge),gender:state.gender,mode:state.accumulation,premiumUsd:calc.premiumUsd});const policyYear=state.selectedPolicyYearTouched?state.selectedPolicyYear:(state.accumulation==="deferred"?6:1);return oalaScenarioValues({premiumHkd:state.premiumHkd,outcome,policyYear,hkdPerUsd:getDisplayFxRate()});}
 function renderOala(){const o=state.oala;const linked=getOalaLinkedValues();const result=linked?evaluateOala({...o,annuityPremium:linked.annuityPremium,annuityMonthlyIncome:linked.annuityMonthlyIncome}):null;const limits=o.household==="couple"?oalaData.couple:oalaData.single;return `<div class="journey-top"><button class="back-button" data-action="home">${icon("back")} 返回首頁</button></div><section class="content-page"><div class="eyebrow">外部支援 · 社會福利署公開資料</div><h1>長者生活津貼</h1><p class="lead">了解年金安排在長者生活津貼資產及入息審查下的處理方式。</p><div class="panel"><div class="stat-row"><div class="stat"><small>${o.household==="couple"?"夫婦":"單身"}每月入息限額</small><strong>${hkd(limits.incomeLimit)}</strong></div><div class="stat"><small>${o.household==="couple"?"夫婦":"單身"}資產限額</small><strong>${hkd(limits.assetLimit)}</strong></div><div class="stat"><small>每月津貼金額</small><strong>${hkd(oalaData.monthlyBenefit)}</strong></div></div><p>以上數字由${oalaData.effectiveDate}起生效。申請人須年滿${oalaData.eligibilityAge}歲，並符合居港、入息、資產及其他資格要求。夫婦須按社署規定合併考慮雙方收入及資產。</p><div class="disclosure">按社署現行公開的年金處理原則作初步估算。實際個別年金保單的資產及入息處理，以及長者生活津貼資格，最終由社會福利署按當時政策審批。</div><div class="oala-source-links"><a class="source-link" href="${oalaData.limitsSourceUrl}" target="_blank" rel="noopener">入息及資產限額 ↗</a><a class="source-link" href="${oalaData.paymentSourceUrl}" target="_blank" rel="noopener">每月津貼金額 ↗</a></div></div><div class="panel"><h2>年金安排前後初步試算</h2><p>夫婦請輸入申請人與配偶／同居伴侶合計資料。年金保費及每月支付會連結你目前的 EverBliss 試算。</p>${linked?`<div class="linked-scenario"><strong>目前 EverBliss 情境 · 第${linked.policyYear}保單年度 · ${linked.attainedAge}歲</strong><span>投入年金保費：${hkd(linked.annuityPremium)}</span><span>該年度每月支付：${hkd(linked.annuityMonthlyIncome)}</span></div>`:`<div class="alert">尚未完成 EverBliss 年金試算</div>`}<div class="field-grid"><div class="field"><label for="oala-age">年齡</label><input id="oala-age" data-oala="age" type="number" min="0" value="${html(o.age)}"></div><div class="field"><label for="oala-household">入息及資產限額</label><select id="oala-household" data-oala="household"><option value="single" ${o.household==="single"?"selected":""}>單身</option><option value="couple" ${o.household==="couple"?"selected":""}>已婚／符合條件的同居伴侶</option></select><span class="field-hint">夫婦情況須合併考慮配偶／同居伴侶的收入及資產。</span></div>${oalaMoneyField("oala-current-assets","currentAssets","目前可評估資產（HKD）",o.currentAssets,"不包括不屬於社署可評估資產的項目。")}${oalaMoneyField("oala-current-income","currentMonthlyIncome","目前每月可評估入息（HKD）",o.currentMonthlyIncome,"年金等定期支付應計入入息。")}${oalaMoneyField("oala-surrender","surrenderProceeds","退保／提取所得（HKD）",o.surrenderProceeds,"如適用，作為資產加回試算。")}</div>${result?`<div class="before-after" style="margin-top:20px"><div class="panel"><h2>安排前</h2><p>可評估資產：<strong>${hkd(n(o.currentAssets))}</strong></p><p>每月入息：<strong>${hkd(n(o.currentMonthlyIncome))}</strong></p></div><div class="panel"><h2>年金安排後</h2><p>可評估資產：約 <strong>${hkd(result.remainingAssessableAssets)}</strong></p><p>每月入息：約 <strong>${hkd(result.monthlyIncomeTestAmount)}</strong></p></div></div><div class="result-cards"><div class="result-card"><small>年齡門檻 · ${oalaData.eligibilityAge}歲</small><strong>${result.ageEligible?"達到年齡門檻":"未達年齡門檻"}</strong></div><div class="result-card"><small>資產審查 · ${hkd(result.remainingAssessableAssets)} / 上限 ${hkd(limits.assetLimit)}</small><strong>${result.withinAssetLimit?"按此項目未超限":"按此項目已超限"}</strong></div><div class="result-card"><small>入息審查 · ${hkd(result.monthlyIncomeTestAmount)} / 月 · 上限 ${hkd(limits.incomeLimit)} / 月</small><strong>${result.withinIncomeLimit?"按此項目未超限":"按此項目已超限"}</strong></div></div><div class="alert">只按社署現行公開的市場年金處理原則作初步估算；社署會按當時政策及個別情況審批。以上結果不代表合資格確認。</div>`:""}<p>官方數據核對日期：${oalaData.verifiedDate}。生效日期：${oalaData.effectiveDate}。</p></div></section>`;}
 function renderHiddenComparison(){if(!appDefaults.showHongKongAnnuityComparison)return `<div class="journey-top"><button class="back-button" data-action="home">${icon("back")} 返回首頁</button></div><section class="content-page"><div class="alert">此比較頁目前未開放。</div></section>`;return `<section class="content-page"><h1>香港年金與優悅年金</h1><p class="lead">官方數據未完成核實，具體比較欄位顯示為未提供。</p></section>`;}
-function render(){document.body.classList.toggle("edit-mode",userEdit&&!previewMode);root.dataset.page=state.page;const pages={home:renderHome,concern:renderConcern,income:renderIncome,liquidity:renderLiquidity,concept:renderConcept,timing:renderTiming,plan:renderPlan,result:renderResult,summary:renderSummary,features:renderFeatures,health:renderHealth,care:renderCare,death:renderDeath,services:renderServices,oala:renderOala,hkComparison:renderHiddenComparison,admin:()=>renderAdminSurface({activeDomain:activeAdminDomain,dataset:adminDataset,status:adminDataset?"OFFICIAL_READ_ONLY":"OFFICIAL_CONNECTOR_NOT_DEPLOYED",filters:adminFilters,draft:adminDraft,selectedRecordId:selectedAdminRecordId,canPublish:Boolean(endpointForAdmin()&&authorizedAdminSession?.authorized),draftError:adminDraftError})};root.innerHTML=pages[state.page]?.()||renderHome();document.querySelector("#app-version").textContent=window.EVERBLISS_VERSION||"版本未載入";document.querySelector("#return-ava").href=returnUrl();wireEditable();}
+function render(){document.body.classList.toggle("edit-mode",userEdit&&!previewMode);root.dataset.page=state.page;const pages={home:renderHome,concern:renderConcern,income:renderIncome,liquidity:renderLiquidity,concept:renderConcept,timing:renderTiming,plan:renderPlan,result:renderResult,summary:renderSummary,features:renderFeatures,health:renderHealth,care:renderCare,death:renderDeath,services:renderServices,oala:renderOala,hkComparison:renderHiddenComparison,admin:()=>renderAdminSurface({activeDomain:activeAdminDomain,dataset:adminDataset,status:adminDataset?"OFFICIAL_READ_ONLY":"OFFICIAL_CONNECTOR_NOT_DEPLOYED",filters:adminFilters,draft:adminDraft,selectedRecordId:selectedAdminRecordId,canPublish:Boolean(endpointForAdmin()&&authorizedAdminSession?.authorized),draftError:adminDraftError,appVersion:window.EVERBLISS_RELEASE?.version})};root.innerHTML=pages[state.page]?.()||renderHome();document.querySelector("#app-version").textContent=window.EVERBLISS_RELEASE?.version||document.querySelector("#app-version").textContent;document.querySelector("#return-ava").href=returnUrl();wireEditable();}
 function endpointForAdmin(){return officialEndpoint;}
 function returnUrl(){const params=new URLSearchParams(location.search);const surface=params.get("avaSurface");if(surface==="user")return "https://ivancww.github.io/avaplatform/?avaSurface=user";if(surface==="admin")return "https://ivancww.github.io/avaplatform/?avaSurface=admin";return "https://ivancww.github.io/avaplatform/";}
 function wireEditable(){if(!userEdit||previewMode)return;root.querySelectorAll("[data-editable]").forEach(el=>{el.contentEditable="true";el.spellcheck=false;});}
@@ -144,15 +147,13 @@ root.addEventListener("click",async event=>{
 function readOverridesFromDom(){const title=root.querySelector('[data-editable="heroTitle"]')?.innerText.trim();const support=root.querySelector('[data-editable="heroSupport"]')?.innerText.trim();if(title)overrides.heroTitle=title;if(support)overrides.heroSupport=support;}
 document.addEventListener("click",event=>{if(event.target.closest("[data-action='close-dialog']"))dialog.close();});
 async function init(){
-  const [saved,storedOverrides,release]=await Promise.all([loadAppState(),loadUserOverrides(),fetch("./release.json",{cache:"no-store"}).then(r=>r.ok?r.json():null).catch(()=>null)]);
-  const endpoint=window.EVERBLISS_CONFIG?.officialEndpoint||release?.officialEndpoint||"";officialEndpoint=endpoint;
-  const official=await resolveOfficialDataset({endpoint,loadLastKnownGood:loadLastKnownGoodOfficial,saveLastKnownGood:saveLastKnownGoodOfficial});
-  setOfficialCalculationDataset(official.dataset);
-  const productConfig=await resolveProductConfig({endpoint,fallback:{hkd_per_usd_calculation_rate:fxConfig.rate}});runtimeHkdPerUsd=productConfig.hkdPerUsd;if(saved){state={...createInitialState(),...saved,...restorePlanInputs(saved,runtimeHkdPerUsd),oala:{...createInitialState().oala,...saved.oala}};delete state.annuityAllocationHkd;delete state.premiumUsd;delete state.hkdPerUsd;delete state.oala.annuityPremium;delete state.oala.annuityMonthlyIncome;scenarioReady=Boolean(saved.scenarioReady||["result","summary"].includes(saved.page));state.scenarioReady=scenarioReady;}
-  overrides=storedOverrides||{};baselineOverrides={...overrides};
-  if(release?.version){window.EVERBLISS_VERSION=release.version;document.querySelector("#app-version").textContent=release.version;}
-  const params=new URLSearchParams(location.search);const entry=params.get("avaEntry");
+  const release=window.EVERBLISS_RELEASE||{};
+  officialEndpoint=window.EVERBLISS_CONFIG?.officialEndpoint||release.officialEndpoint||"";
+  const endpoint=officialEndpoint;
+  document.querySelector("#app-version").textContent=release.version||document.querySelector("#app-version").textContent;
+  const entry=new URLSearchParams(location.search).get("avaEntry");
   if(entry==="admin"){
+    root.innerHTML='<section class="content-page"><div class="panel"><div class="data-status">AVA ADMIN</div><h1>正在驗證管理工作階段</h1><p>請稍候。</p></div></section>';
     try{
       authorizedAdminSession=await establishAdminSession({location,opener:window.opener,postMessage:(message,origin)=>window.opener?.postMessage(message,origin),waitForProof:()=>receiveAdminProof(),exchangeProof:adminExchangeFromConfiguredEndpoint(endpoint)});
     }catch{authorizedAdminSession={authorized:false,reason:"ADMIN_CONNECTOR_UNAVAILABLE"};}
@@ -164,12 +165,45 @@ async function init(){
     root.innerHTML=`<section class="content-page"><div class="journey-top"><a class="back-button" href="https://ivancww.github.io/avaplatform/?avaSurface=admin" rel="noopener">${icon("back")} 返回 AVA Studio</a></div><div class="panel"><div class="data-status">ADMIN ACCESS DENIED · FAIL CLOSED</div><h1>未能驗證管理工作階段</h1><p>EverBliss 只接受 AVA Studio 的 ava-admin-session-v1 單次 ticket、nonce 及瀏覽器 proof，並須由 EverBliss server-side connector 再驗證。查詢參數本身不會授予權限。</p><p>目前狀態：${html(authorizedAdminSession?.reason||"ADMIN_CONNECTOR_UNAVAILABLE")}。官方資料連線尚未部署。</p></div></section>`;
     registerServiceWorker();return;
   }
-  if(entry==="user"){userEdit=true;state.page="home";}else if(!saved?.page)state.page="home";
-  if(state.page==="hkComparison"&&!appDefaults.showHongKongAnnuityComparison)state.page="home";
-  state.scenarioReady=scenarioReady;state.scenarioReady=scenarioReady;await persist();render();registerServiceWorker();
+  await startLocalFirst({
+    loadLocal:()=>Promise.all([loadAppState(),loadUserOverrides(),loadLastKnownGoodOfficial(),loadLastKnownGoodProductConfig()]),
+    activateLocal:([saved,storedOverrides,lastKnownGood,storedConfig])=>{
+      const official=resolveLocalOfficialDataset(lastKnownGood);
+      setOfficialCalculationDataset(official.dataset);
+      const localConfig=resolveLocalProductConfig({lastKnownGood:storedConfig,fallback:{hkd_per_usd_calculation_rate:fxConfig.rate}});
+      runtimeHkdPerUsd=localConfig.hkdPerUsd;
+      if(saved){state={...createInitialState(),...saved,...restorePlanInputs(saved,runtimeHkdPerUsd),oala:{...createInitialState().oala,...saved.oala}};delete state.annuityAllocationHkd;delete state.premiumUsd;delete state.hkdPerUsd;delete state.oala.annuityPremium;delete state.oala.annuityMonthlyIncome;scenarioReady=Boolean(saved.scenarioReady||["result","summary"].includes(saved.page));state.scenarioReady=scenarioReady;}
+      overrides=storedOverrides||{};baselineOverrides={...overrides};
+      if(entry==="user"){userEdit=true;state.page="home";}else if(!saved?.page)state.page="home";
+      if(state.page==="hkComparison"&&!appDefaults.showHongKongAnnuityComparison)state.page="home";
+      state.scenarioReady=scenarioReady;
+    },
+    render,
+    schedule:scheduleAfterPaint,
+    refreshCloud:()=>Promise.allSettled([
+      resolveOfficialDataset({endpoint,loadLastKnownGood:loadLastKnownGoodOfficial,saveLastKnownGood:saveLastKnownGoodOfficial}).then(official=>{
+        if(official.source==="VALID_CLOUD_OFFICIAL"){
+          setOfficialCalculationDataset(official.dataset);
+          if(["result","summary"].includes(state.page))render();
+        }
+      }),
+      resolveProductConfig({endpoint,fallback:{hkd_per_usd_calculation_rate:fxConfig.rate},saveLastKnownGood:saveLastKnownGoodProductConfig}).then(productConfig=>{
+        if(productConfig.source==="VALID_CLOUD_PRODUCT_CONFIG"){
+          const changed=runtimeHkdPerUsd!==productConfig.hkdPerUsd;
+          runtimeHkdPerUsd=productConfig.hkdPerUsd;
+          if(changed&&["result","summary","oala"].includes(state.page))render();
+        }
+      })
+    ])
+  });
+  void persist();
+  const checkRelease=()=>void (async()=>{let registration=serviceWorkerRegistration;try{registration ||= await navigator.serviceWorker?.getRegistration?.();}catch{}const result=await checkDeployedRelease({current:release,registration});if(result.updateAvailable&&result.deployed?.buildId)pendingUpdateBuildId=result.deployed.buildId;})();
+  scheduleAfterPaint(()=>{registerServiceWorker();checkRelease();document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")checkRelease();});});
 }
-function registerServiceWorker(){if(!("serviceWorker" in navigator))return;navigator.serviceWorker.register("./sw.js").then(reg=>{reg.update().catch(()=>{});navigator.serviceWorker.addEventListener("message",event=>{if(event.data?.type==="EVERBLISS_SHELL_UPDATED")applyShellUpdate(event.data.buildId);});}).catch(()=>{});}
-function applyShellUpdate(buildId){const key=`everbliss:shell-reloaded:${buildId}`;if(!buildId||sessionStorage.getItem(key))return;sessionStorage.setItem(key,"1");location.reload();}
+let serviceWorkerRegistration=null;
+let pendingUpdateBuildId="";
+function registerServiceWorker(){if(!( "serviceWorker" in navigator))return;navigator.serviceWorker.addEventListener("message",event=>{if(event.data?.type==="EVERBLISS_SHELL_UPDATED")applyShellUpdate(event.data.buildId);});navigator.serviceWorker.addEventListener("controllerchange",()=>{if(pendingUpdateBuildId)applyShellUpdate(pendingUpdateBuildId);});navigator.serviceWorker.register("./sw.js",{updateViaCache:"none"}).then(reg=>{serviceWorkerRegistration=reg;reg.update().catch(()=>{});if(reg.waiting)reg.waiting.postMessage({type:"EVERBLISS_SKIP_WAITING"});}).catch(()=>{});}
+function applyShellUpdate(buildId){const runningBuild=window.EVERBLISS_RELEASE?.buildId;if(claimForcedReload(buildId,runningBuild,sessionStorage))location.reload();}
 
 
 init();

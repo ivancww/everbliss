@@ -69,6 +69,12 @@ export function validateOfficialDataset(input) {
   return true;
 }
 
+export function resolveLocalOfficialDataset(lastKnownGood) {
+  const normalized = normalizeOfficialDataset(lastKnownGood);
+  if (validateOfficialDataset(normalized)) return { dataset: normalized, source: "LAST_KNOWN_GOOD_OFFICIAL" };
+  return { dataset: BUNDLED_OFFICIAL_FALLBACK, source: "VERIFIED_BUILT_IN_OFFICIAL_FALLBACK" };
+}
+
 export async function resolveOfficialDataset({ endpoint = "", fetchImpl = globalThis.fetch, loadLastKnownGood, saveLastKnownGood } = {}) {
   if (endpoint) {
     let timer = null;

@@ -65,4 +65,4 @@ The app-owned Admin surface has Product Config, Income Rates, Surrender Multipli
 
 ## Version
 
-The single user-facing App version source is `release.json`: `v0.1.0`. The deployment SHA is technical build metadata and does not replace the human-readable version.
+The single user-facing App version source is `release.json`: `v0.2.0`. The deployment SHA is generated build metadata and remains separate from the human-readable version. Customer-facing production changes must bump the semantic App version; the release-contract workflow validates the source and generated artifacts.

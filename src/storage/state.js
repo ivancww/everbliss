@@ -72,6 +72,17 @@ export async function saveLastKnownGoodOfficial(dataset) {
   return record;
 }
 
+export async function loadLastKnownGoodProductConfig() {
+  try { return safeParse(globalThis.localStorage?.getItem(localKey("product-config-lkg"))); }
+  catch { return null; }
+}
+
+export async function saveLastKnownGoodProductConfig(config) {
+  const record = { ...config, cacheLayer: "LAST_KNOWN_GOOD_PRODUCT_CONFIG", cachedAt: new Date().toISOString() };
+  try { globalThis.localStorage?.setItem(localKey("product-config-lkg"), JSON.stringify(record)); } catch { /* built-in config remains available */ }
+  return record;
+}
+
 export function createInitialState() {
   return {
     page: "home", journeyStep: "concern", concern: null,

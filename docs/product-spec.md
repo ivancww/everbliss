@@ -1,4 +1,4 @@
-# EverBliss product specification — v0.1.0
+# EverBliss product specification — v0.2.0
 
 ## Purpose and customer language
 
@@ -16,7 +16,7 @@ EverBliss helps a customer understand how part of retirement assets might be con
 - Non-guaranteed income is separately disclosed and may be higher, lower, or zero.
 - Exact supplied income anchors are used at supported ages; intermediate ages are linearly interpolated only between same-gender, same-mode official income anchors. Surrender and death schedules use the 36 parsed Official proposal curves and interpolate each multiplier by attained age and policy year. All 104 supported scenarios have continuous schedules through attained age 100; the engine never derives surrender or death values from income rates.
 - Premiums above US$25,000 are marked `SCALED_FROM_OFFICIAL`, not as direct proposal values.
-- Customer input is HKD. No HKD/USD rate is embedded; the customer must enter a rate for conversion.
+- Customer input is HKD. The internal configured HKD/USD rate converts to the USD Official calculation amount; customers do not enter or edit FX.
 
 ## Product feature hub
 
