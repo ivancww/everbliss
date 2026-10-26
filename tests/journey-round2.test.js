@@ -50,7 +50,7 @@ test("J02, J03, OALA and J07 presentation contracts remain in the single frontst
   assert.match(source, /data-result-age/);
   assert.match(source, /data-result-policy-year/);
   assert.match(source, /data-result-primary/);
-  assert.match(source, /html\(p\["j07\.annualLabel"\]\).*annual/);
+  assert.match(source, /presentationText\("j07\.annualLabel".*annual/);
   assert.match(source, /selectedPolicyYearTouched\?state\.selectedPolicyYear:\(state\.accumulation===\"deferred\"\?6:1\)/);
   assert.match(source, /liquidity-reserve-value/);
   assert.match(source, /updateLiquiditySummary\(\)/);
@@ -58,7 +58,7 @@ test("J02, J03, OALA and J07 presentation contracts remain in the single frontst
   assert.doesNotMatch(source, /year-chip|數據來源|插值錨點|premium scaling|Official anchor/i);
   const timing = source.slice(source.indexOf("function renderTiming()"), source.indexOf("function renderSummary()"));
   const resultCard = source.slice(source.indexOf("function resultPhase("), source.indexOf("function renderSummary()"));
-  const summary = source.slice(source.indexOf("function renderSummary()"), source.indexOf("function renderHome()"));
+  const summary = source.slice(source.indexOf("function renderSummary()"), source.indexOf("function editToolbar()"));
   assert.doesNotMatch(timing, /非保證每月收入|非保證入息/);
   assert.match(timing, /p\["j05.helper"\]/);
   const presentation = await fs.readFile(path.join(root, "src/data/presentation/user-config.js"), "utf8");assert.match(presentation, /第85個月起可加入額外每月收入/);

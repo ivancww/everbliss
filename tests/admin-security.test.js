@@ -25,7 +25,7 @@ test("valid mocked Platform proof only opens Admin after successful server excha
   const session = await establishAdminSession({
     location: { search: `?avaEntry=admin&avaAdminLaunch=${ticket}&avaAdminLaunchNonce=${nonce}` },
     opener, postMessage: () => {}, waitForProof: async () => event,
-    exchangeProof: async proof => ({ success: proof.contract === "ava-admin-session-v1", appId: "everbliss", adminAuthorized: true, expiresAt: new Date(Date.now() + 60_000).toISOString(), session: "ephemeral-server-session" })
+    exchangeProof: async proof => ({ success: proof.contract === "ava-admin-session-v1", appId: "everbliss", adminAuthorized: true, contract: "ava-admin-session-v1", expiresAt: new Date(Date.now() + 60_000).toISOString(), session: "ephemeral-server-session" })
   });
   assert.equal(session.authorized, true);
 });
@@ -51,4 +51,28 @@ test("Admin publish requires authorized session and returns safe conflict from c
   assert.equal((await publishAdminDraft({ draft, session: null, connector: async () => ({ status: "PUBLISHED" }) })).status, "DENIED");
   const result = await publishAdminDraft({ draft, session: { authorized: true, expiresAt: new Date(Date.now() + 60_000).toISOString() }, connector: async payload => ({ status: payload.expected_dataset_version === "dataset-1" ? "CONFLICT" : "PUBLISHED" }) });
   assert.equal(result.status, "CONFLICT");
+});
+
+
+test("Admin launch rejects wrong app binding, expired browser proof and invalid Platform exchange responses", async () => {
+  const route = `?avaEntry=admin&avaAdminLaunch=${ticket}&avaAdminLaunchNonce=${nonce}`;
+  const wrongAppEvent = { ...event, data: { ...event.data, appId: "another-app" } };
+  const deniedWrongApp = await establishAdminSession({ location: { search: route }, opener, waitForProof: async () => wrongAppEvent, exchangeProof: async () => ({ success: true }) });
+  assert.equal(deniedWrongApp.authorized, false);
+  const expiredEvent = { ...event, data: { ...event.data, expiresAt: new Date(Date.now() - 1000).toISOString() } };
+  const deniedExpired = await establishAdminSession({ location: { search: route }, opener, waitForProof: async () => expiredEvent, exchangeProof: async () => ({ success: true }) });
+  assert.equal(deniedExpired.authorized, false);
+  const badExchange = await establishAdminSession({ location: { search: route }, opener, waitForProof: async () => event, exchangeProof: async () => ({ success: true, appId: "another-app", adminAuthorized: true, contract: "ava-admin-session-v1", expiresAt: new Date(Date.now() + 60_000).toISOString(), session: "opaque" }) });
+  assert.equal(badExchange.authorized, false);
+});
+
+test("App sends Platform proof exchange through its server-side GAS connector contract", async () => {
+  let request;
+  const session = await establishAdminSession({ location: { search: `?avaAdminLaunch=${ticket}&avaAdminLaunchNonce=${nonce}` }, opener, waitForProof: async () => event, exchangeProof: async value => { request = value; return { success: true, appId: "everbliss", adminAuthorized: true, contract: "ava-admin-session-v1", expiresAt: new Date(Date.now() + 60_000).toISOString(), session: "opaque-app-session" }; } });
+  assert.equal(request.action, "exchangeAdminSession");
+  assert.equal(request.appId, "everbliss");
+  assert.equal(request.launchTicket, ticket);
+  assert.equal(request.launchNonce, nonce);
+  assert.equal(request.browserProof, event.data.browserProof);
+  assert.equal(session.session, "opaque-app-session");
 });

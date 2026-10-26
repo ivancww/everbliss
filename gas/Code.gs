@@ -4,7 +4,7 @@
  * Public cloud reads are independent from the app-owned calculation engine.
  *
  * Required Script Property: EVERBLISS_SHEET_ID
- * Future AVA Admin properties: AVA_ADMIN_VERIFY_URL, AVA_ADMIN_VERIFY_TOKEN
+ * AVA Admin property: AVA_PLATFORM_ADMIN_ENDPOINT (Platform GAS Web App URL; no browser secret)
  */
 const EB = Object.freeze({
   APP_ID: 'everbliss',
@@ -55,7 +55,7 @@ function doPost(e) {
   try {
     const body=JSON.parse(e?.postData?.contents || '{}');
     if (body.appId && body.appId!==EB.APP_ID) throw Error('APP_ID_MISMATCH');
-    if (body.action==='exchangeAdminProof') return json_(exchangeAdminProof_(body));
+    if (body.action==='exchangeAdminSession') return json_(exchangeAdminSession_(body));
     if (body.action==='getAdminOfficialDataset') return json_(adminGetDataset_(body));
     if (body.action==='publishDataset') return json_(adminPublish_(body));
     return json_(publicAction_(String(body.action || 'getOfficialDataset')));
@@ -132,30 +132,43 @@ function verifyRegression_(s) {
 }
 function ensurePublished_(){if(readDatasetMeta_().status!=='PUBLISHED') throw Error('OFFICIAL_DATASET_NOT_PUBLISHED');}
 
-// Admin proof exchanges fail closed until the official AVA verifier is configured.
-function exchangeAdminProof_(body) {
+// Browser-bound AVA proof is exchanged server-to-server with the current Platform contract.
+// The browser receives only an opaque App session ID; the signed Platform proof stays in Script Cache.
+function exchangeAdminSession_(body) {
   if(body.contract!==EB.ADMIN_CONTRACT||body.appId!==EB.APP_ID||!body.launchTicket||!body.launchNonce||!body.browserProof||!body.expiresAt) throw Error('ADMIN_PROOF_INCOMPLETE');
-  if(new Date(body.expiresAt).getTime()<=Date.now()) throw Error('ADMIN_PROOF_EXPIRED');
-  const verified=verifyWithAvaPlatform_(body);
-  if(!verified?.authorized||verified.appId!==EB.APP_ID||new Date(verified.expiresAt||body.expiresAt).getTime()<=Date.now()) throw Error('ADMIN_PROOF_DENIED');
-  const lock=LockService.getScriptLock(); if(!lock.tryLock(10000)) throw Error('ADMIN_PROOF_LOCK_BUSY');
-  try { const cache=CacheService.getScriptCache(), ticketHash=sha256_(String(body.launchTicket)), replay='used-ticket:'+ticketHash; if(cache.get(replay)) throw Error('ADMIN_TICKET_REPLAYED'); const expires=verified.expiresAt||body.expiresAt, ttl=Math.max(60,Math.min(EB.SESSION_TTL_MAX_SECONDS,Math.ceil((new Date(expires).getTime()-Date.now())/1000))), sessionId=Utilities.getUuid(); cache.put(replay,'1',ttl); cache.put('admin:'+sessionId,JSON.stringify({sessionId,appId:EB.APP_ID,expiresAt:expires,subject:verified.subject||verified.userId||'ava-admin'}),ttl); return {success:true,appId:EB.APP_ID,adminAuthorized:true,expiresAt:expires,session:sessionId}; } finally {lock.releaseLock();}
+  const browserExpiry=Date.parse(body.expiresAt); if(!Number.isFinite(browserExpiry)||browserExpiry<=Date.now()) throw Error('ADMIN_PROOF_EXPIRED');
+  const endpoint=PropertiesService.getScriptProperties().getProperty('AVA_PLATFORM_ADMIN_ENDPOINT');
+  if(!endpoint) throw Error('AVA_PLATFORM_ADMIN_ENDPOINT_NOT_CONFIGURED');
+  const response=UrlFetchApp.fetch(endpoint,{method:'post',contentType:'application/json',payload:JSON.stringify({action:'exchangeAdminSession',appId:EB.APP_ID,launchTicket:String(body.launchTicket),launchNonce:String(body.launchNonce),browserProof:String(body.browserProof)}),muteHttpExceptions:true});
+  if(response.getResponseCode()<200||response.getResponseCode()>=300) throw Error('AVA_PLATFORM_EXCHANGE_HTTP_'+response.getResponseCode());
+  let result; try{result=JSON.parse(response.getContentText());}catch(_){throw Error('AVA_PLATFORM_EXCHANGE_INVALID_JSON');}
+  const expiresAt=Date.parse(result.expiresAt);
+  // The browser proof is short-lived (the launch ticket window), while the
+  // exchanged Platform session may live until the authenticated Admin session
+  // expires. The Platform response is authoritative for session expiry.
+  if(result.success!==true||result.appId!==EB.APP_ID||result.contract!==EB.ADMIN_CONTRACT||typeof result.adminSessionProof!=='string'||result.adminSessionProof.length<24||!Number.isFinite(expiresAt)||expiresAt<=Date.now()) throw Error('AVA_PLATFORM_EXCHANGE_DENIED');
+  const lock=LockService.getScriptLock();if(!lock.tryLock(10000))throw Error('ADMIN_EXCHANGE_LOCK_BUSY');
+  try{const sessionId=Utilities.getUuid(),ttl=Math.max(1,Math.min(EB.SESSION_TTL_MAX_SECONDS,Math.floor((expiresAt-Date.now())/1000)));if(ttl<1)throw Error('ADMIN_SESSION_EXPIRED');CacheService.getScriptCache().put('admin:'+sessionId,JSON.stringify({appId:EB.APP_ID,adminSessionProof:result.adminSessionProof,expiresAt:result.expiresAt}),ttl);return{success:true,appId:EB.APP_ID,adminAuthorized:true,contract:EB.ADMIN_CONTRACT,expiresAt:result.expiresAt,session:sessionId};}finally{lock.releaseLock();}
 }
-function verifyWithAvaPlatform_(body) {
-  const p=PropertiesService.getScriptProperties(), url=p.getProperty('AVA_ADMIN_VERIFY_URL'), token=p.getProperty('AVA_ADMIN_VERIFY_TOKEN');
-  if(!url) throw Error('AVA_PLATFORM_ADMIN_VERIFIER_NOT_CONFIGURED');
-  const headers={'Content-Type':'application/json'}; if(token) headers.Authorization='Bearer '+token;
-  const res=UrlFetchApp.fetch(url,{method:'post',contentType:'application/json',headers,payload:JSON.stringify({contract:body.contract,appId:body.appId,launchTicket:body.launchTicket,launchNonce:body.launchNonce,browserProof:body.browserProof,expiresAt:body.expiresAt}),muteHttpExceptions:true});
-  if(res.getResponseCode()<200||res.getResponseCode()>=300) throw Error('AVA_PLATFORM_VERIFY_HTTP_'+res.getResponseCode());
-  try{return JSON.parse(res.getContentText());}catch(_){throw Error('AVA_PLATFORM_VERIFY_INVALID_JSON');}
+function verifyPlatformAdminSession_(adminSessionProof,operation,expectedExpiry) {
+  if(!['official-read','official-write'].includes(operation))throw Error('ADMIN_OPERATION_NOT_ALLOWED');
+  const endpoint=PropertiesService.getScriptProperties().getProperty('AVA_PLATFORM_ADMIN_ENDPOINT');if(!endpoint)throw Error('AVA_PLATFORM_ADMIN_ENDPOINT_NOT_CONFIGURED');
+  const response=UrlFetchApp.fetch(endpoint,{method:'post',contentType:'application/json',payload:JSON.stringify({action:'verifyAdminSession',appId:EB.APP_ID,adminSessionProof,operation}),muteHttpExceptions:true});
+  if(response.getResponseCode()<200||response.getResponseCode()>=300)throw Error('AVA_PLATFORM_VERIFY_HTTP_'+response.getResponseCode());
+  let result;try{result=JSON.parse(response.getContentText());}catch(_){throw Error('AVA_PLATFORM_VERIFY_INVALID_JSON');}
+  const expiry=Date.parse(result.expiresAt);
+  if(result.success!==true||result.appId!==EB.APP_ID||result.operation!==operation||result.contract!==EB.ADMIN_CONTRACT||!Number.isFinite(expiry)||expiry<=Date.now()||expiry>Date.parse(expectedExpiry))throw Error('AVA_PLATFORM_SESSION_DENIED');
+  return result;
 }
-function requireAdmin_(body) {
-  const id=String(body.session||''), raw=id&&CacheService.getScriptCache().get('admin:'+id); if(!raw) throw Error('ADMIN_SESSION_REQUIRED');
-  const s=JSON.parse(raw); if(s.appId!==EB.APP_ID||new Date(s.expiresAt).getTime()<=Date.now()) throw Error('ADMIN_SESSION_INVALID'); return s;
+function requireAdmin_(body,operation) {
+  const id=String(body.session||''),raw=id&&CacheService.getScriptCache().get('admin:'+id);if(!raw)throw Error('ADMIN_SESSION_REQUIRED');
+  const s=JSON.parse(raw);if(s.appId!==EB.APP_ID||Date.parse(s.expiresAt)<=Date.now())throw Error('ADMIN_SESSION_INVALID');
+  verifyPlatformAdminSession_(s.adminSessionProof,operation,s.expiresAt);
+  return {sessionId:id,appId:s.appId,expiresAt:s.expiresAt,subject:'AVA Admin'};
 }
-function adminGetDataset_(body) { const s=requireAdmin_(body); return {success:true,appId:EB.APP_ID,adminAuthorized:true,sessionExpiresAt:s.expiresAt,dataset:{productConfig:readProductConfig_(),incomeRates:readIncomeRates_(),surrenderMultipliers:readSurrender_(),deathMultipliers:readDeath_(),officialSources:readSources_(),datasetMeta:readDatasetMeta_(),auditLog:readAuditLog_()}}; }
+function adminGetDataset_(body) { const s=requireAdmin_(body,'official-read');return{success:true,appId:EB.APP_ID,adminAuthorized:true,contract:EB.ADMIN_CONTRACT,sessionExpiresAt:s.expiresAt,dataset:{productConfig:readProductConfig_(),incomeRates:readIncomeRates_(),surrenderMultipliers:readSurrender_(),deathMultipliers:readDeath_(),officialSources:readSources_(),datasetMeta:readDatasetMeta_(),auditLog:readAuditLog_()}}; }
 function readAuditLog_() { const sh=requireSheet_(EB.SHEETS.AUDIT), rows=sh.getDataRange().getValues().slice(1).filter(r=>r.some(v=>v!==''&&v!==null)).slice(-200); return rows.map(r=>({timestamp:text_(r[0]),admin_session_id:text_(r[1]),operation:text_(r[2]),domain:text_(r[3]),record_id:text_(r[4]),old_value:text_(r[5]),new_value:text_(r[6]),dataset_version_before:text_(r[7]),dataset_version_after:text_(r[8]),source_sha:text_(r[9])})); }
-function adminPublish_(body) { const s=requireAdmin_(body); return withLock_(()=>publish_(body,s)); }
+function adminPublish_(body) { return withLock_(()=>{const s=requireAdmin_(body,'official-write');return publish_(body,s);}); }
 function publish_(body,session) {
   const meta=readDatasetMeta_(); if(String(body.expected_dataset_version)!==String(meta.dataset_version)) return {success:false,status:'CONFLICT',currentDatasetVersion:meta.dataset_version};
   const changes=Array.isArray(body.changes)?body.changes:[]; validateChanges_(changes);

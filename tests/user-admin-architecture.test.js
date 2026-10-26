@@ -56,7 +56,9 @@ test("User preview/save/reset controls affect only User Override and presentatio
   assert.match(main, /clearUserOverrides/);
   assert.match(state, /OVERRIDE_STORE = "userOverrides"/);
   assert.match(state, /function clearUserOverrides/);
-  assert.doesNotMatch(main, /contentEditable\s*=|contenteditable/i);
+  assert.match(main, /contenteditable="true"/);
+  assert.match(main, /data-presentation-edit/);
+  assert.match(main, /data-user-value/);
   assert.match(main, /USER_OVERRIDE/);
   const reset = resetPresentationSection({ "home.heroTitle": "Custom", "j02.gapLabel": "Gap", "j03.helper": "Liquidity" }, "J02 INCOME");
   assert.equal(reset["home.heroTitle"], "Custom");
@@ -70,9 +72,14 @@ test("Front resolves presentation only and keeps Official calculator layer indep
   assert.match(main, /setOfficialCalculationDataset\(official\.dataset\)/);
   assert.match(main, /resolveLocalOfficialDataset\(lastKnownGood\)/);
   assert.match(main, /if\(entryMode==="user"\).*userEdit=true/s);
-  assert.match(main, /root\.innerHTML=userEdit&&!previewMode\?renderUserEditor\(\)/);
+  assert.doesNotMatch(main, /renderUserEditor/);
+  assert.match(main, /root\.innerHTML=\(pages\[state\.page\]/);
+  assert.match(main, /root\.dataset\.page=state\.page/);
+  assert.match(main, /userEdit\?\{schema:"everbliss-user-config-v1",values:pendingUserValues\}:overrides/);
   assert.match(main, /\)\+editToolbar\(\)/);
   assert.match(main, /\["hkComparison","admin","adminBlocked","userEditor"\]\.includes\(state\.page\)/);
+  assert.match(main, /userEditing=false;previewMode=false;render\(\)/);
+  assert.match(main, /Save|儲存本機設定/);
 });
 
 test("Admin domains expose product, income, surrender, death, sources, dataset and read-only audit", () => {
@@ -82,12 +89,12 @@ test("Admin domains expose product, income, surrender, death, sources, dataset a
   draft = addAdminDraftChange(draft, { domain: "product", recordId: "hkd_per_usd_calculation_rate", field: "value", oldValue: 7.8, newValue: 7.81 });
   assert.equal(validateAdminDraft(draft).valid, true);
   assert.throws(() => addAdminDraftChange(draft, { domain: "audit", recordId: "1", field: "new_value", newValue: "tamper" }), /not editable/);
-  const rendered = renderAdminSurface({ activeDomain: "audit", dataset: { datasetMeta: { dataset_version: "v4", status: "PUBLISHED" }, auditLog: [{ timestamp: "now", operation: "publish", record_id: "x" }] }, appVersion: "v0.3.0" });
+  const rendered = renderAdminSurface({ activeDomain: "audit", dataset: { datasetMeta: { dataset_version: "v4", status: "PUBLISHED" }, auditLog: [{ timestamp: "now", operation: "publish", record_id: "x" }] }, appVersion: "v0.4.0" });
   assert.match(rendered, /AVA Admin/);
   assert.match(rendered, /數據版本／發布/);
   assert.match(rendered, /修改紀錄/);
   assert.match(rendered, /ava-admin-session-v1/);
-  assert.match(rendered, /v0\.3\.0/);
+  assert.match(rendered, /v0\.4\.0/);
 });
 
 test("Admin audit API is authenticated read-only and GAS Admin connector remains fail-closed", () => {
@@ -95,7 +102,7 @@ test("Admin audit API is authenticated read-only and GAS Admin connector remains
   assert.match(gas, /function adminGetDataset_\(body\)/);
   assert.match(gas, /auditLog:readAuditLog_\(\)/);
   assert.match(gas, /function readAuditLog_\(\)/);
-  assert.match(gas, /function requireAdmin_\(body\)/);
-  assert.match(gas, /AVA_PLATFORM_ADMIN_VERIFIER_NOT_CONFIGURED/);
+  assert.match(gas, /function requireAdmin_\(body,operation\)/);
+  assert.match(gas, /AVA_PLATFORM_ADMIN_ENDPOINT_NOT_CONFIGURED/);
   assert.doesNotMatch(gas, /adminPassword|queryParam.*adminAuthorized/i);
 });

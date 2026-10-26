@@ -25,11 +25,12 @@ export async function establishAdminSession({ location, opener, postMessage, wai
   // The AVA Platform's one-time browser proof must be exchanged by EverBliss's
   // server-side connector. The client never grants privilege based on URL/UI.
   const result = await exchangeProof({
-    action: "exchangeAdminProof", appId: EVERBLISS_APP_ID,
+    action: "exchangeAdminSession", appId: EVERBLISS_APP_ID,
     launchTicket, launchNonce, browserProof: event.data.browserProof,
     expiresAt: event.data.expiresAt, contract: AVA_ADMIN_CONTRACT
   });
   if (!result?.success || result.appId !== EVERBLISS_APP_ID || result.adminAuthorized !== true
+    || result.contract !== AVA_ADMIN_CONTRACT || typeof result.session !== "string" || !result.session
     || !Number.isFinite(Date.parse(result.expiresAt)) || Date.parse(result.expiresAt) <= now) {
     return { authorized: false, reason: "SERVER_ADMIN_EXCHANGE_DENIED" };
   }

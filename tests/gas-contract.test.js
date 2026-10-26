@@ -20,7 +20,7 @@ test("GAS reads the production Chinese system tabs and exposes English canonical
 });
 
 test("GAS Admin mutation path is fail-closed, versioned, locked and audited", () => {
-  assert.match(gas, /AVA_PLATFORM_ADMIN_VERIFIER_NOT_CONFIGURED/);
+  assert.match(gas, /AVA_PLATFORM_ADMIN_ENDPOINT_NOT_CONFIGURED/);
   assert.match(gas, /expected_dataset_version/);
   assert.match(gas, /LockService\.getScriptLock\(\)/);
   assert.match(gas, /READ_AFTER_WRITE_FAILED/);
@@ -32,19 +32,30 @@ test("GAS Admin mutation path is fail-closed, versioned, locked and audited", ()
   assert.match(gas, /FIELD_NOT_ALLOWED/);
   assert.match(gas, /OFFICIAL_SOURCE_REQUIRED/);
   assert.doesNotMatch(gas, /adminPassword|localAdminPassword|queryParam.*adminAuthorized/i);
-  assert.match(gas, /AVA_ADMIN_VERIFY_TOKEN/);
+  assert.match(gas, /AVA_PLATFORM_ADMIN_ENDPOINT/);
+  assert.match(gas, /action:'exchangeAdminSession'/);
+  assert.match(gas, /action:'verifyAdminSession'/);
+  assert.match(gas, /verifyPlatformAdminSession_\(s\.adminSessionProof,operation,s\.expiresAt\)/);
+  assert.match(gas, /const browserExpiry=Date\.parse\(body\.expiresAt\)/);
+  assert.match(gas, /Platform response is authoritative for session expiry/);
+  assert.doesNotMatch(gas, /expiresAt>browserExpiry/, "short browser-proof lifetime must not truncate the authenticated Platform session");
+  assert.match(gas, /adminPublish_\(body\) \{ return withLock_\(\(\)=>\{const s=requireAdmin_\(body,'official-write'\)/);
+  assert.match(gas, /adminSessionProof/);
+  assert.match(gas, /official-read/);
+  assert.match(gas, /official-write/);
+  assert.doesNotMatch(gas, /AVA_ADMIN_VERIFY_URL|AVA_ADMIN_VERIFY_TOKEN/);
 });
 
 test("unprovisioned live connector remains explicit and fail-closed", async () => {
   assert.equal(release.officialEndpoint, "");
   await assert.rejects(adminExchangeFromConfiguredEndpoint("")({}), /Admin Connector is not configured/);
   assert.match(gas, /EVERBLISS_SHEET_ID_NOT_CONFIGURED/);
-  assert.match(gas, /AVA_PLATFORM_ADMIN_VERIFIER_NOT_CONFIGURED/);
+  assert.match(gas, /AVA_PLATFORM_ADMIN_ENDPOINT_NOT_CONFIGURED/);
   assert.match(gas, /EVERBLISS_SHEET_ID/);
   assert.match(liveStatus, /AVA - EverBliss/);
   assert.match(liveStatus, /Canonical Data Pack v1/);
   assert.match(liveStatus, /36 income anchors, 36 multiplier scenarios/);
-  assert.match(liveStatus, /AVA_ADMIN_VERIFY_URL/);
+  assert.match(liveStatus, /AVA_PLATFORM_ADMIN_ENDPOINT/);
   assert.match(liveStatus, /BROWSER QA PENDING/);
 });
 
