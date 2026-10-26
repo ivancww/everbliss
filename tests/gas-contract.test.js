@@ -55,3 +55,8 @@ test("Pages build injects one canonical Official endpoint from the repository va
   assert.match(build, /process\.env\.EVERBLISS_OFFICIAL_ENDPOINT/);
   assert.equal(release.officialEndpoint, "", "the source release manifest remains environment-driven");
 });
+
+
+test("GAS Product Config exposes the machine-readable HKD/USD trial conversion setting", () => {
+  assert.match(gas, /hkd_per_usd_calculation_rate:\['港元兌美元試算換算率','number'\]/);
+});

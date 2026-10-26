@@ -29,3 +29,8 @@ Existing surrender data was preserved. Official parsed curves directly cover age
 ## Official data service preparation
 
 The runtime resolver validates cloud Official datasets, caches valid data separately as Last Known Good, and falls back to the bundled release snapshot on network failure or schema rejection. Runtime interpolation expands Official income anchors where necessary. A future deployed Google Sheet/GAS becomes the cloud source only after the seven-sheet schema, verifier, deployment, and data equivalence gates in `docs/google-sheet-gas-architecture.md` pass. No Sheet, GAS endpoint, or Platform write integration is configured in the current PR.
+
+
+## Customer HKD plan input
+
+The customer enters one HKD premium (`premiumHkd`). Runtime derives USD as `premiumHkd / hkd_per_usd_calculation_rate`, then applies the existing USD Official minimum and maximum and passes the derived USD value into the unchanged outcome engine. Result and OALA scenario display use the same configured rate. The rate is held in Product Config with a bundled 7.8 fallback that preserves the previous J06 trial setup; it is a presentation/input conversion only, not an Official return assumption or live FX feed.

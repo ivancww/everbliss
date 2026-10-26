@@ -45,3 +45,10 @@ Admin operations: `exchangeAdminProof`, `getAdminOfficialDataset`, `publishDatas
 ## Deployment gates
 
 The production Web App and Sheet are live and public Official reads are verified. Runtime deployment obtains the endpoint through the GitHub Actions repository variable `EVERBLISS_OFFICIAL_ENDPOINT`; source `release.json` intentionally remains blank and build-time injection writes the endpoint only to `dist/release.json`. The repository variable was configured with the deployed `/exec` URL and read back on 2026-10-26. No Pages deployment or hosted runtime/browser QA was triggered by this task. Admin remains fail-closed until `AVA_ADMIN_VERIFY_URL` and, where required, `AVA_ADMIN_VERIFY_TOKEN` are configured in GAS Script Properties. Those are server-side integration properties, not user credentials.
+
+
+## HKD customer display conversion
+
+The ProductConfig API exposes `hkd_per_usd_calculation_rate`, read from the Chinese `產品設定` row `港元兌美元試算換算率`. This rate converts a customer-entered HKD plan premium to USD before calling the frozen Official calculation engine, and converts USD outcomes back to HKD for display. It is not an Official product return rate or a live market quote. The retained 7.8 value preserves the prior customer trial conversion until an authorized configuration update changes it. User input never edits the rate.
+
+The app requests `getProductConfig`; if the cloud config is unavailable or lacks a valid rate, it uses the bundled verified configuration fallback. The Sheet row is prepared and read back. The GAS source change is in this branch; production GAS must be updated and redeployed separately before the live API serves the new key.

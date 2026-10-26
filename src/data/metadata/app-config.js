@@ -11,4 +11,10 @@ export const appIdentity = Object.freeze({
 export const appCapabilities = Object.freeze({ frontend: true, user: true, admin: true });
 export const appDefaults = Object.freeze({ showHongKongAnnuityComparison: false });
 export const dataPrecedence = Object.freeze(["BUILT_IN_DEFAULT", "OFFICIAL", "USER_OVERRIDE"]);
-export const fxConfig = Object.freeze({ currencyPair: "HKD/USD", rate: null, source: "USER_ENTERED", asOf: null });
+export const fxConfig = Object.freeze({
+  currencyPair: "HKD/USD",
+  rate: 7.8,
+  source: "LEGACY_J06_TRIAL_CONFIGURATION",
+  asOf: null,
+  productConfigKey: "hkd_per_usd_calculation_rate"
+});

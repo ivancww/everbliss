@@ -1,39 +1,43 @@
-import { productTerms } from "../data/official/everbliss-anchors.js";
+export const MIN_PREMIUM_USD = 25000;
+export const MAX_PREMIUM_USD = 4000000;
 
-export function validatePlanPremiumUsd(value) {
-  const premiumUsd = value === "" || value === null || value === undefined ? NaN : Number(value);
-  if (!Number.isFinite(premiumUsd)) return { valid: false, reason: "REQUIRED", premiumUsd: null };
-  if (premiumUsd < productTerms.premiumMin || premiumUsd > productTerms.premiumMax) {
-    return { valid: false, reason: "PREMIUM_OUT_OF_RANGE", premiumUsd };
+const validRate = rate => Number.isFinite(Number(rate)) && Number(rate) > 0;
+
+export function premiumHkdToUsd(premiumHkd, hkdPerUsd) {
+  const amount = Number(premiumHkd);
+  if (!Number.isFinite(amount) || amount <= 0 || !validRate(hkdPerUsd)) return null;
+  return amount / Number(hkdPerUsd);
+}
+
+export function validatePlanPremiumHkd(premiumHkd, hkdPerUsd) {
+  const amount = Number(premiumHkd);
+  if (!Number.isFinite(amount) || amount <= 0) return { valid: false, reason: "REQUIRED", premiumHkd: null, premiumUsd: null };
+  if (!validRate(hkdPerUsd)) return { valid: false, reason: "FX_UNAVAILABLE", premiumHkd: amount, premiumUsd: null };
+  const premiumUsd = premiumHkdToUsd(amount, hkdPerUsd);
+  if (premiumUsd < MIN_PREMIUM_USD) return { valid: false, reason: "BELOW_MINIMUM", premiumHkd: amount, premiumUsd };
+  if (premiumUsd > MAX_PREMIUM_USD) return { valid: false, reason: "ABOVE_MAXIMUM", premiumHkd: amount, premiumUsd };
+  return { valid: true, reason: null, premiumHkd: amount, premiumUsd };
+}
+
+export function restorePlanInputs(saved = {}, hkdPerUsd) {
+  const premiumHkd = Number(saved.premiumHkd);
+  if (Number.isFinite(premiumHkd) && premiumHkd > 0) return { premiumHkd };
+  const previousPremiumUsd = Number(saved.premiumUsd);
+  if (Number.isFinite(previousPremiumUsd) && previousPremiumUsd > 0 && validRate(hkdPerUsd)) {
+    return { premiumHkd: Math.round(previousPremiumUsd * Number(hkdPerUsd)) };
   }
-  return { valid: true, reason: null, premiumUsd };
+  return { premiumHkd: validRate(hkdPerUsd) ? Math.round(MIN_PREMIUM_USD * Number(hkdPerUsd)) : null };
 }
 
-export function restorePlanInputs(saved = {}, configuredFxRate = null) {
-  const savedPremium = Number(saved.premiumUsd);
-  const premiumUsd = Number.isFinite(savedPremium) && savedPremium > 0 ? savedPremium : productTerms.premiumMin;
-  const savedFxRate = Number(saved.hkdPerUsd);
-  const configuredRate = Number(configuredFxRate);
-  const hkdPerUsd = Number.isFinite(savedFxRate) && savedFxRate > 0
-    ? savedFxRate
-    : Number.isFinite(configuredRate) && configuredRate > 0 ? configuredRate : null;
-  return { premiumUsd, hkdPerUsd };
+export function hkdPremiumRange(hkdPerUsd) {
+  if (!validRate(hkdPerUsd)) return null;
+  return { minHkd: MIN_PREMIUM_USD * Number(hkdPerUsd), maxHkd: MAX_PREMIUM_USD * Number(hkdPerUsd) };
 }
 
-export function formatOutcomeAmount(amountUsd, hkdPerUsd = null) {
-  const amount = Number(amountUsd);
-  const rate = Number(hkdPerUsd);
+export function formatOutcomeAmount(usdAmount, hkdPerUsd) {
+  const amount = Number(usdAmount);
+  const format = value => new Intl.NumberFormat("zh-HK", { maximumFractionDigits: 0 }).format(Math.round(value));
   if (!Number.isFinite(amount)) return { amount: "—", currency: "USD", fxRate: null };
-  if (Number.isFinite(rate) && rate > 0) {
-    return {
-      amount: `HK$${new Intl.NumberFormat("zh-HK", { maximumFractionDigits: 0 }).format(Math.round(amount * rate))}`,
-      currency: "HKD",
-      fxRate: rate
-    };
-  }
-  return {
-    amount: `US$${new Intl.NumberFormat("zh-HK", { maximumFractionDigits: 0 }).format(Math.round(amount))}`,
-    currency: "USD",
-    fxRate: null
-  };
+  if (validRate(hkdPerUsd)) return { amount: `HK$${format(amount * Number(hkdPerUsd))}`, currency: "HKD", fxRate: Number(hkdPerUsd) };
+  return { amount: `US$${format(amount)}`, currency: "USD", fxRate: null };
 }
