@@ -24,7 +24,7 @@ Canonical value labels include `M` → `男`, `F` → `女`, `immediate` → `�
 
 The Sheet contains **36** Official parsed proposal scenarios, **36** exact Official income-rate anchor rows, **1,396** Official surrender rows, **1,396** Official death rows, and **36** Official source records. The 55M deferred rate was read directly from its Official proposal's Year 6 guaranteed and Year 8 income rows (US$1,245 guaranteed; US$708 non-guaranteed; US$1,953 total per US$25,000), rather than retaining its former interpolated classification. No interpolated age rates were written as Official records. Multiplier rows are direct `OFFICIAL_PARSED` source rows from `支取每月入息（詳細說明）`; no interpolated rows are stored. The proposal generator version is marked `未提供` where the source did not provide it. Known source extraction dates are retained; unknown extraction dates are shown as `未記錄`.
 
-The frozen customer calculation bundle was not changed. Its 55M deferred income-rate record is still marked `INTERPOLATED`; the Sheet's direct proposal anchor is Official source data but is not read by the App until a separately reviewed data-release/runtime integration updates that snapshot.
+The frozen built-in fallback remains unchanged. It retains its earlier source set and may classify the 55M deferred rate as `INTERPOLATED`; the live published Cloud dataset includes the 55M deferred Official anchor. Dataset versioning keeps the cloud release independent from the App shell version.
 
 The visible Chinese tabs are `產品設定`, `官方產品數據`, `官方資料來源`, `Workflow`, `數據版本`, `修改紀錄`; hidden machine tabs are `系統_每年收入回報率`, `系統_退保價值倍數`, `系統_身故賠償倍數`, `系統_官方資料來源`, `系統_數據版本`, `系統_修改紀錄`. The GAS source reads the hidden system tabs and translates headers through the canonical-English-to-Chinese mapping in `gas/Code.gs`; API/business logic keys stay English. The current live data has 36 income anchors, 36 scenarios and 1,396 surrender/death year records each. The published API read-back is documented in `docs/live-integration-status.md`.
 
@@ -40,7 +40,7 @@ Cloud payloads are rejected unless schema, dataset version, complete 104-row inc
 
 Public reads: `health`, `getOfficialDataset`, `getProductConfig`, `getIncomeRates`, `getSurrenderMultipliers`, `getDeathMultipliers`, `getDatasetMeta`.
 
-Admin operations: `getAdminOfficialDataset`, `upsertIncomeRate`, `upsertSurrenderMultiplier`, `upsertDeathMultiplier`, `upsertProductConfig`, `publishDataset`. Mutations require an Admin session after AVA Platform proof verification, operation allowlisting, schema validation, expected dataset version, ScriptLock, record and dataset version increments, read-after-write verification, and append-only audit. The verifier fails closed until the exact AVA Platform production exchange contract and deployment properties are wired; no password or local-only Admin grant is provided.
+Admin operations: `exchangeAdminProof`, `getAdminOfficialDataset`, `publishDataset` (draft changes are submitted to the publish operation). Mutations require an Admin session after AVA Platform proof verification, operation allowlisting, schema validation, expected dataset version, ScriptLock, record and dataset version increments, read-after-write verification, and append-only audit. The verifier fails closed until its production properties are configured; no password or local-only Admin grant is provided.
 
 ## Deployment gates
 
