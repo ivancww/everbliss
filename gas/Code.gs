@@ -151,6 +151,7 @@ function buildDataset_() {
 function validateDataset_() {
   const incomes=readIncomeRates_(), surrender=readSurrender_(), death=readDeath_(), d=buildDataset_(), scenarios=d.multipliers.scenarios;
   if(incomes.length!==36) throw Error('INCOME_ROW_COUNT_INVALID:'+incomes.length);
+  if(d.incomeRates.rates.length!==104) throw Error('CANONICAL_INCOME_COUNT_INVALID');
   if(surrender.length!==1396) throw Error('SURRENDER_ROW_COUNT_INVALID:'+surrender.length);
   if(death.length!==1396) throw Error('DEATH_ROW_COUNT_INVALID:'+death.length);
   if(Object.keys(scenarios).length!==36) throw Error('SCENARIO_COUNT_INVALID');
@@ -200,7 +201,7 @@ function requireAdmin_(body,operation) {
   verifyPlatformAdminSession_(s.adminSessionProof,operation,s.expiresAt);
   return {sessionId:id,appId:s.appId,expiresAt:s.expiresAt,subject:'AVA Admin'};
 }
-function adminGetDataset_(body) { const s=requireAdmin_(body,'official-read');return{success:true,appId:EB.APP_ID,adminAuthorized:true,contract:EB.ADMIN_CONTRACT,sessionExpiresAt:s.expiresAt,dataset:{productConfig:readProductConfig_(),incomeRates:readIncomeRates_(),surrenderMultipliers:readSurrender_(),deathMultipliers:readDeath_(),officialSources:readSources_(),datasetMeta:readDatasetMeta_(),auditLog:readAuditLog_()}}; }
+function adminGetDataset_(body) { const s=requireAdmin_(body,'official-read');return{success:true,appId:EB.APP_ID,adminAuthorized:true,contract:EB.ADMIN_CONTRACT,sessionExpiresAt:s.expiresAt,dataset:{productConfig:readProductConfig_(),incomeRates:readIncomeRates_(),canonicalIncomeRates:readCanonicalIncomeRates_(),surrenderMultipliers:readSurrender_(),deathMultipliers:readDeath_(),officialSources:readSources_(),datasetMeta:readDatasetMeta_(),auditLog:readAuditLog_()}}; }
 function readAuditLog_() { const sh=requireSheet_(EB.SHEETS.AUDIT), rows=sh.getDataRange().getValues().slice(1).filter(r=>r.some(v=>v!==''&&v!==null)).slice(-200); return rows.map(r=>({timestamp:text_(r[0]),admin_session_id:text_(r[1]),operation:text_(r[2]),domain:text_(r[3]),record_id:text_(r[4]),old_value:text_(r[5]),new_value:text_(r[6]),dataset_version_before:text_(r[7]),dataset_version_after:text_(r[8]),source_sha:text_(r[9])})); }
 function adminPublish_(body) { return withLock_(()=>{const s=requireAdmin_(body,'official-write');return publish_(body,s);}); }
 function publish_(body,session) {
@@ -220,7 +221,7 @@ function publish_(body,session) {
 }
 function validateChanges_(changes) {
   const allow={product:['value'],income:['guaranteed_rate','ng_rate_from_year8','total_rate_from_year8'],surrender:['surrender_total_usd_25k','surrender_multiplier'],death:['guaranteed_death_value_usd_25k','terminal_bonus_usd_25k','death_total_usd_25k','death_multiplier'],sources:['status','notes']};
-  changes.forEach(c=>{if(!allow[c.domain]||!c.recordId||!allow[c.domain].includes(c.field)) throw Error('FIELD_NOT_ALLOWED'); if(['income','surrender','death'].includes(c.domain)){if(!c.sourceFile) throw Error('OFFICIAL_SOURCE_REQUIRED'); verifySource_(c.sourceFile);} const n=Number(c.newValue); if(!Number.isFinite(n)&&c.domain!=='sources') throw Error('OFFICIAL_VALUE_INVALID'); if((c.domain==='surrender'||c.domain==='death')&&n<0) throw Error('OFFICIAL_VALUE_INVALID'); if(c.domain==='income'&&(n<0||n>1)) throw Error('INCOME_RATE_INVALID');});
+  changes.forEach(c=>{if(c.domain==='income') throw Error('INCOME_CANONICAL_SHEET_EDIT_REQUIRED'); if(!allow[c.domain]||!c.recordId||!allow[c.domain].includes(c.field)) throw Error('FIELD_NOT_ALLOWED'); if(['income','surrender','death'].includes(c.domain)){if(!c.sourceFile) throw Error('OFFICIAL_SOURCE_REQUIRED'); verifySource_(c.sourceFile);} const n=Number(c.newValue); if(!Number.isFinite(n)&&c.domain!=='sources') throw Error('OFFICIAL_VALUE_INVALID'); if((c.domain==='surrender'||c.domain==='death')&&n<0) throw Error('OFFICIAL_VALUE_INVALID'); if(c.domain==='income'&&(n<0||n>1)) throw Error('INCOME_RATE_INVALID');});
 }
 function verifySource_(filename) { const s=readSources_().find(x=>x.filename===filename); if(!s) throw Error('OFFICIAL_SOURCE_NOT_FOUND'); const v=String(s.status||''); if(!(v.indexOf('已核實')===0||v.toUpperCase().indexOf('VERIFIED')===0)) throw Error('OFFICIAL_SOURCE_NOT_VERIFIED'); if(!String(s.table_type).includes('支取每月入息')) throw Error('OFFICIAL_SOURCE_SCENARIO_INVALID'); }
 function prepareChange_(c) {
@@ -251,7 +252,7 @@ function auditValue_(v) { return v===null||v===undefined?'':String(v); }
 function appendAudit_(entries,before,after,sha,session,snapshot) { if(!entries.length)return; const now=new Date().toISOString(), hidden=requireSheet_(EB.SHEETS.AUDIT), visible=spreadsheet_().getSheetByName(EB.SHEETS.VISIBLE_AUDIT), hiddenRows=[], visibleRows=[]; entries.forEach(e=>{const c=e.change,b=e.backup,old=auditValue_(b.old),value=auditValue_(c.newValue); hiddenRows.push([now,session.sessionId,'publish:'+c.field,c.domain,c.recordId,old,value,before,after,sha]); if(visible)visibleRows.push([now,session.subject||session.sessionId,c.domain,c.recordId+' / '+c.field,old,value]);}); const hiddenStart=snapshot.hidden.lastRow+1; hidden.getRange(hiddenStart,1,hiddenRows.length,hiddenRows[0].length).setValues(hiddenRows); if(visible&&visibleRows.length){const visibleStart=snapshot.visible.lastRow+1; visible.getRange(visibleStart,1,visibleRows.length,visibleRows[0].length).setValues(visibleRows);} }
 function updateMeta_(updates) { const sh=requireSheet_(EB.SHEETS.DATASET_META), vals=sh.getDataRange().getValues(), headers=vals[0].map(text_); Object.keys(updates).forEach(k=>{const c=headers.indexOf(F.meta[k]); if(c>=0){const v=k==='status'&&updates[k]==='PUBLISHED'?'已發布':updates[k]; sh.getRange(2,c+1).setValue(v);}}); syncVisibleMeta_(updates); }
 function syncVisibleMeta_(updates) { const sh=spreadsheet_().getSheetByName(EB.SHEETS.VISIBLE_DATASET_META); if(!sh)return; const v=sh.getDataRange().getValues(); if(v.length<2)return; const h=v[0].map(text_), m={dataset_version:'版本',status:'狀態',updated_at:'更新日期'}; Object.keys(m).forEach(k=>{if(Object.hasOwn(updates,k)){const c=h.indexOf(m[k]);if(c>=0)sh.getRange(2,c+1).setValue(k==='status'?'已發布':updates[k]);}}); }
-function computeSha_() { return sha256_(JSON.stringify({config:readProductConfig_(),income:readIncomeRates_(),surrender:readSurrender_(),death:readDeath_(),sources:readSources_()})); }
+function computeSha_() { return sha256_(JSON.stringify({config:readProductConfig_(),income:readCanonicalIncomeRates_(),surrender:readSurrender_(),death:readDeath_(),sources:readSources_()})); }
 function sha256_(s) { return Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,s).map(b=>('0'+(((b+256)%256).toString(16))).slice(-2)).join(''); }
 function incrementVersion_(v) { const s=String(v||''), a=s.match(/^(.*\bv)(\d+)$/); if(a)return a[1]+(Number(a[2])+1); const b=s.match(/^(\d+)\.(\d+)\.(\d+)$/); if(b)return `${b[1]}.${b[2]}.${Number(b[3])+1}`; throw Error('DATASET_VERSION_INVALID'); }
 
