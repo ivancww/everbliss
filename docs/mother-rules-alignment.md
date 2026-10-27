@@ -23,6 +23,6 @@ Required EverBliss Script Property: `AVA_PLATFORM_ADMIN_ENDPOINT`, set to the cu
 
 ## Release and verification
 
-The release manifest is `v0.4.2`; the existing build ID, local-first startup, service worker, and forced-update contracts remain owned by EverBliss. Product calculations and Official data are unchanged.
+The release manifest is `v0.4.3`; the existing build ID, local-first startup, service worker, and forced-update contracts remain owned by EverBliss. Product calculations and Official data are unchanged.
 
 The repository implementation is reviewable in this branch. It is not a claim of live deployment: verify live Edit → Preview → Save Local and Front override persistence before enabling Platform User. Deploy the updated GAS to the existing EverBliss project, set `AVA_PLATFORM_ADMIN_ENDPOINT`, preserve existing properties, verify Platform `AVA_ADMIN_APP_IDS`, and exercise the one-time proof plus protected Official read before enabling Platform Admin.

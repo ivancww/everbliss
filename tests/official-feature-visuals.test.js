@@ -8,3 +8,14 @@ test('official feature images exist in shell and retain the product boundaries',
  for(const phrase of ['額外20次','合共25次','保證每月收入的50%','並非個人試算','並非額外獎賞','非保單合約利益'])assert.ok(source.includes(phrase));
  assert.ok(source.includes('formatOutcomeAmount(calc.healthExtraMonthly,getDisplayFxRate())'));
 });
+
+test('each feature detail owns only its intended image assets',()=>{
+ const s=fs.readFileSync('src/app/main.js','utf8');
+ const between=(a,b)=>s.slice(s.indexOf(`function ${a}(`),s.indexOf(`function ${b}(`));
+ const health=between('renderHealth','renderCare'),care=between('renderCare','renderDeath'),death=between('renderDeath','renderServices'),services=between('renderServices','oalaNotes');
+ for(const name of ['monthly-income','case-illustration'])assert.ok(health.includes(name+'.webp'));
+ assert.ok(care.includes('advance-timeline.webp'));
+ for(const name of ['healthy-ageing','service-structure'])assert.ok(services.includes(name+'.webp'));
+ assert.doesNotMatch(death,/assets\/aia/);
+ for(const part of [health,care,services])assert.match(part,/loading="lazy"/);
+});

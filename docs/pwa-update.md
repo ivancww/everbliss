@@ -1,4 +1,4 @@
-# EverBliss v0.4.2 local-first startup and update contract
+# EverBliss v0.4.3 local-first startup and update contract
 
 `release.json` is the only source of the semantic App version. The build validates `vMAJOR.MINOR.PATCH`, writes a generated `build-info.js` containing the same version plus the independent Git build SHA, and stamps that SHA into the Service Worker cache name. The build replaces the header version token so it is visible in the static shell before application JavaScript or network requests run.
 
