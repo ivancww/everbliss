@@ -104,7 +104,7 @@ export function createInitialState() {
   return {
     page: "home", journeyStep: "concern", concern: null,
     desiredMonthlySpending: 0, existingStableIncome: 0,
-    totalRetirementAssets: 0, liquidReserve: 0, liquidReserveMode: "amount", liquidReserveMonths: 12,
+    totalRetirementAssets: 0, liquidReserve: 0, liquidReserveMode: "amount", liquidReserveMonths: 12, liquidReserveYears: null, liquidReserveUnknown: false,
     issueAge: 60, gender: "F", premiumHkd: 195000, scenarioReady: false, accumulation: "immediate",
     selectedFeature: null,
     selectedOutcomeView: "income", selectedPolicyYear: 1, selectedPolicyYearTouched: false,

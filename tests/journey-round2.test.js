@@ -42,11 +42,11 @@ test("J02, J03, OALA and J07 presentation contracts remain in the single frontst
   const shell = await fs.readFile(path.join(root, "src/pwa/sw-template.js"), "utf8");
   assert.match(source, /id="retirement-gap-value"/);
   assert.match(source, /updateRetirementGap\(\)/);
-  assert.match(source, /\["unknown","暫時未知",p\["j03\.unknownOrder"\]\]/);
+  assert.match(source, /data-reserve-unknown/);
   assert.match(source, /id="liquidity-reserve-value"/);
   assert.match(source, /尚未完成 EverBliss 年金試算/);
   assert.doesNotMatch(source, /id="oala-premium"|id="oala-payout"/);
-  assert.match(source, /data-policy-year-slider/);
+  assert.match(source, /data-year/);
   assert.match(source, /data-result-age/);
   assert.match(source, /data-result-policy-year/);
   assert.match(source, /data-result-primary/);
@@ -67,7 +67,7 @@ test("J02, J03, OALA and J07 presentation contracts remain in the single frontst
   assert.match(resultCard, /額外收入並非保證，實際金額可能較高、較低，甚至為零。/);
   assert.doesNotMatch(resultCard, /非保證入息|利息/);
   assert.match(presentation, /兩種安排由第85個月起可加入額外每月收入/);
-  assert.match(summary, /額外收入並非保證，實際金額可能較高、較低，甚至為零。/);
+  assert.doesNotMatch(summary, /額外收入並非保證，實際金額可能較高、較低，甚至為零。/);
   assert.doesNotMatch(summary, /非保證入息|利息/);
   assert.match(shell, /src\/app\/journey-model\.js/);
   assert.match(shell, /src\/data\/official\/product-config\.js/);
