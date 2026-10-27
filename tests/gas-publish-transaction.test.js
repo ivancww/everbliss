@@ -38,10 +38,10 @@ class FakeSheet {
 }
 
 const sheetNames = {
-  income: "系統_每年收入回報率", sources: "系統_官方資料來源", meta: "系統_數據版本",
+  income: "系統_退保價值倍數", sources: "系統_官方資料來源", meta: "系統_數據版本",
   visibleMeta: "數據版本", audit: "系統_修改紀錄", visibleAudit: "修改紀錄"
 };
-const incomeHeaders = ["記錄編號", "投保年齡", "性別", "收入模式", "保證每年收入率", "第8年起非保證收入率", "第8年起總收入率", "資料類型", "官方建議書", "建議書版本", "核實日期", "記錄版本", "更新時間"];
+const incomeHeaders = ["記錄編號", "投保年齡", "性別", "收入模式", "退保價值倍數", "保單年度", "當時年齡", "資料類型", "官方建議書", "建議書版本", "核實日期", "記錄版本", "更新時間"];
 const sourceHeaders = ["資料來源編號", "檔案名稱", "投保年齡", "性別", "收入模式", "官方基準保費（美元）", "建議書產生器版本", "資料表類型", "擷取日期", "核實日期", "狀態", "備註"];
 const metaHeaders = ["數據集名稱", "數據版本", "架構版本", "已發布版本", "狀態", "資料指紋", "更新時間", "發布時間", "發布者"];
 const auditHeaders = ["時間", "管理員工作階段", "操作", "資料範圍", "記錄編號", "原值", "新值", "修改前數據版本", "修改後數據版本", "資料指紋"];
@@ -81,7 +81,7 @@ function createHarness({ failAt = "", failVisibleAudit = false, failMetaRestore 
     if ((failAt === "before-meta" && validations === 1) || (failAt === "after-meta" && validations === 2)) throw new Error(`injected validation ${validations}`);
     return { success: true };
   };
-  const change = { domain: "income", recordId: "income-60-M-immediate", field: "guaranteed_rate", newValue: 0.043, sourceFile: "60yrs 即期 m.pdf" };
+  const change = { domain: "surrender", recordId: "income-60-M-immediate", field: "surrender_multiplier", newValue: 0.043, sourceFile: "60yrs 即期 m.pdf" };
   const session = { sessionId: "admin-session-1", subject: "admin-actor" };
   const publish = () => context.publish_({ expected_dataset_version: expectedVersion, changes: [change] }, session);
   return { context, sheets, publish, change, originalMeta, originalVisibleMeta };
@@ -114,7 +114,7 @@ test("successful publish updates data and meta and writes old/new audit values w
   assert.equal(meta[1], "v2"); assert.equal(meta[3], "v2"); assert.equal(meta[4], "已發布"); assert.equal(meta[5], "sha-new"); assert.equal(meta[8], "admin-actor");
   const audit = hiddenAudit(h);
   assert.equal(audit.length, 1);
-  assert.deepEqual(audit[0].slice(1, 10), ["admin-session-1", "publish:guaranteed_rate", "income", "income-60-M-immediate", "0.042", "0.043", "v1", "v2", "sha-new"]);
+  assert.deepEqual(audit[0].slice(1, 10), ["admin-session-1", "publish:surrender_multiplier", "surrender", "income-60-M-immediate", "0.042", "0.043", "v1", "v2", "sha-new"]);
   assert.equal(visibleAudit(h).length, 1);
   assert.equal(visibleAudit(h)[0][4], "0.042");
   assert.equal(visibleAudit(h)[0][5], "0.043");

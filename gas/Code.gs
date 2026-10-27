@@ -70,7 +70,7 @@ function publicAction_(action) {
     case 'getIncomeRates': ensurePublished_(); return {success:true,incomeRates:readIncomeRates_()};
     case 'getSurrenderMultipliers': ensurePublished_(); return {success:true,surrenderMultipliers:readSurrender_()};
     case 'getDeathMultipliers': ensurePublished_(); return {success:true,deathMultipliers:readDeath_()};
-    case 'getOfficialDataset': ensurePublished_(); return {success:true,dataset:buildDataset_()};
+    case 'getOfficialDataset': ensurePublished_(); validateDataset_(); return {success:true,dataset:buildDataset_()};
     case 'getHKAnnuityRates': return getHKAnnuityRates_();
     default: throw Error('ACTION_NOT_ALLOWED');
   }
@@ -90,7 +90,7 @@ function readProductConfig_() {
   return out;
 }
 function readIncomeRates_() {
-  return readTable_(EB.SHEETS.INCOME).map(r=>({record_id:text_(r[F.income.record_id]),issue_age:number_(r[F.income.issue_age]),gender:gender_(r[F.income.gender]),mode:mode_(r[F.income.mode]),guaranteed_rate:number_(r[F.income.guaranteed_rate]),ng_rate_from_year8:number_(r[F.income.ng_rate_from_year8]),total_rate_from_year8:number_(r[F.income.total_rate_from_year8]),source_type:'OFFICIAL',source_file:text_(r[F.income.source_file]),source_version:text_(r[F.income.source_version]),verified_date:date_(r[F.income.verified_date]),record_version:number_(r[F.income.record_version]),updated_at:date_(r[F.income.updated_at])}));
+  return readCanonicalIncomeRates_().map(r=>({record_id:'income-'+r.age+'-'+r.gender+'-'+r.mode,issue_age:r.age,gender:r.gender,mode:r.mode,guaranteed_rate:r.guaranteedRate,ng_rate_from_year8:r.nonGuaranteedRateFromYear8,total_rate_from_year8:r.totalRateFromYear8,source_type:r.sourceType,source_file:r.sourceFile,source_ages:r.sourceAges,source_version:'',verified_date:'',record_version:null,updated_at:''}));
 }
 function readSurrender_() {
   return readTable_(EB.SHEETS.SURRENDER).map(r=>({record_id:text_(r[F.surrender.record_id]),issue_age:number_(r[F.surrender.issue_age]),gender:gender_(r[F.surrender.gender]),mode:mode_(r[F.surrender.mode]),policy_year:number_(r[F.surrender.policy_year]),attained_age:number_(r[F.surrender.attained_age]),surrender_total_usd_25k:number_(r[F.surrender.surrender_total_usd_25k]),surrender_multiplier:number_(r[F.surrender.surrender_multiplier]),source_type:'OFFICIAL_PARSED',source_file:text_(r[F.surrender.source_file]),source_version:text_(r[F.surrender.source_version]),verified_date:date_(r[F.surrender.verified_date]),record_version:number_(r[F.surrender.record_version]),updated_at:date_(r[F.surrender.updated_at])}));
@@ -116,41 +116,47 @@ function readDatasetMeta_() {
 function readCanonicalIncomeRates_() {
   const sheet = requireSheet_('AIA優悅年金_官方保證收入率');
   const values = sheet.getDataRange().getValues();
-  const expected = ['投保年齡','性別','領取模式','保證每月收入（每US$1,000）','保證每年收入率（%）','預期總年收入率（%）','非保證年收入率（%）','數據類型'];
+  const expected = ['投保年齡','性別','領取模式','保證每月收入（每US$1,000）','保證每年收入率（%）','預期總年收入率（%）','非保證年收入率（%）','數據類型','參考年齡','來源／方法'];
   if (values.length !== 145 || expected.some((h,i)=>text_(values[0][i])!==h)) throw Error('AIA_CANONICAL_SCHEMA_INVALID');
   const rates=[], seen=new Set();
   values.slice(1).forEach((r,i)=>{
     const age=Number(r[0]), gender=gender_(r[1]), mode=r[2]==='即時'?'immediate':mode_(r[2]);
-    const guaranteed=Number(r[4]), monthly=Number(r[3]), total=r[5]===''?NaN:Number(r[5]), ng=r[6]===''?NaN:Number(r[6]);
+    const guaranteed=r[4]===''?NaN:Number(r[4]), monthly=r[3]===''?NaN:Number(r[3]), total=r[5]===''?NaN:Number(r[5]), ng=r[6]===''?NaN:Number(r[6]);
     const key=age+'|'+gender+'|'+mode;
-    if (!Number.isInteger(age)||age<40||age>75||seen.has(key)||!Number.isFinite(guaranteed)||
+    if (!Number.isInteger(age)||age<40||age>75||seen.has(key)||!Number.isFinite(guaranteed)||guaranteed<=0||!Number.isFinite(monthly)||monthly<=0||
         Math.abs(guaranteed-monthly*1.2)>0.000001) throw Error('AIA_CANONICAL_ROW_INVALID:'+(i+2));
     seen.add(key);
     if(age<50) return; // no proposal brackets; existing app supports ages 50–75
-    if(!Number.isFinite(total)||!Number.isFinite(ng)||Math.abs(total-guaranteed-ng)>0.000001)
+    if(!Number.isFinite(total)||total<guaranteed||!Number.isFinite(ng)||ng<0||Math.abs(total-guaranteed-ng)>0.000001)
       throw Error('AIA_CANONICAL_INCOME_INVALID:'+(i+2));
-    const source=text_(r[7]);
-    if(!['官方建議書','線性插值估算'].includes(source)) throw Error('AIA_CANONICAL_SOURCE_INVALID:'+(i+2));
+    const source=text_(r[7]), sourceAges=source==='官方建議書'?[age]:text_(r[8]).split('–').map(Number);
+    if(!['官方建議書','線性插值估算'].includes(source) || !text_(r[9]) || (source==='官方建議書' && Number(r[8])!==age) || (source==='線性插值估算' && (sourceAges.length!==2 || !sourceAges.every(Number.isInteger) || sourceAges[0]>=age || sourceAges[1]<=age || sourceAges[0]<50 || sourceAges[1]>75))) throw Error('AIA_CANONICAL_SOURCE_INVALID:'+(i+2));
     rates.push({age,gender,mode,guaranteedRate:guaranteed/100,
-      nonGuaranteedRateFromYear8:ng/100,totalRateFromYear8:total/100,
+      nonGuaranteedRateFromYear8:(total-guaranteed)/100,totalRateFromYear8:total/100,
       sourceType:source==='官方建議書'?'OFFICIAL':'INTERPOLATED',
-      sourceAges:source==='官方建議書'?[age]:text_(r[8]).split('–').map(Number),
+      sourceAges,
       sourceFile:source==='官方建議書'?text_(r[9]):''});
   });
   if(rates.length!==104) throw Error('AIA_CANONICAL_INCOME_COUNT_INVALID:'+rates.length);
+  const byKey=new Map(rates.map(r=>[r.age+'|'+r.gender+'|'+r.mode,r]));
+  rates.filter(r=>r.sourceType==='INTERPOLATED').forEach(r=>{
+    const [low,high]=r.sourceAges, a=byKey.get(low+'|'+r.gender+'|'+r.mode), b=byKey.get(high+'|'+r.gender+'|'+r.mode);
+    if(!a||!b||a.sourceType!=='OFFICIAL'||b.sourceType!=='OFFICIAL') throw Error('AIA_CANONICAL_ANCHOR_INVALID:'+r.age);
+    const expected=a.totalRateFromYear8+(b.totalRateFromYear8-a.totalRateFromYear8)*(r.age-low)/(high-low);
+    if(Math.abs(expected-r.totalRateFromYear8)>1e-8) throw Error('AIA_CANONICAL_INTERPOLATION_INVALID:'+r.age);
+  });
   return rates;
 }
 
 function buildDataset_() {
-  const income=readIncomeRates_(), surrender=readSurrender_(), death=readDeath_(), meta=readDatasetMeta_(), scenarios={};
+  const surrender=readSurrender_(), death=readDeath_(), meta=readDatasetMeta_(), scenarios={};
   surrender.forEach(r=>{const k=scenarioKey_(r.issue_age,r.gender,r.mode); const s=scenarios[k]||(scenarios[k]={issueAge:r.issue_age,gender:r.gender,mode:r.mode,sourceType:'OFFICIAL_PARSED',sourceFile:r.source_file,years:{}}); const y=s.years[String(r.policy_year)]||(s.years[String(r.policy_year)]={attainedAge:r.attained_age}); y.surrenderMultiplier=r.surrender_multiplier; y.surrenderTotal=r.surrender_total_usd_25k;});
   death.forEach(r=>{const k=scenarioKey_(r.issue_age,r.gender,r.mode); const s=scenarios[k]||(scenarios[k]={issueAge:r.issue_age,gender:r.gender,mode:r.mode,sourceType:'OFFICIAL_PARSED',sourceFile:r.source_file,years:{}}); const y=s.years[String(r.policy_year)]||(s.years[String(r.policy_year)]={attainedAge:r.attained_age}); Object.assign(y,{deathMultiplier:r.death_multiplier,deathTotal:r.death_total_usd_25k,guaranteedDeathValue:r.guaranteed_death_value_usd_25k,terminalBonus:r.terminal_bonus_usd_25k});});
-  return {schemaVersion:EB.SCHEMA_VERSION,datasetName:'everbliss-official',datasetVersion:meta.dataset_version,status:'PUBLISHED',sourceSha:meta.source_sha,updatedAt:meta.updated_at,incomeRates:{schemaVersion:EB.API_VERSION,basePremiumUsd:EB.BASE_PREMIUM_USD,rates:readCanonicalIncomeRates_()},multipliers:{schemaVersion:EB.API_VERSION,basePremiumUsd:EB.BASE_PREMIUM_USD,scenarios}};
+  return {schemaVersion:EB.SCHEMA_VERSION,datasetName:'everbliss-official',datasetVersion:meta.dataset_version,status:'PUBLISHED',sourceSha:meta.source_sha,updatedAt:meta.updated_at,incomeRates:{schemaVersion:EB.API_VERSION,datasetContract:'canonical-sheet-v1',basePremiumUsd:EB.BASE_PREMIUM_USD,rates:readCanonicalIncomeRates_()},multipliers:{schemaVersion:EB.API_VERSION,basePremiumUsd:EB.BASE_PREMIUM_USD,scenarios}};
 }
 
 function validateDataset_() {
-  const incomes=readIncomeRates_(), surrender=readSurrender_(), death=readDeath_(), d=buildDataset_(), scenarios=d.multipliers.scenarios;
-  if(incomes.length!==36) throw Error('INCOME_ROW_COUNT_INVALID:'+incomes.length);
+  const surrender=readSurrender_(), death=readDeath_(), d=buildDataset_(), scenarios=d.multipliers.scenarios;
   if(d.incomeRates.rates.length!==104) throw Error('CANONICAL_INCOME_COUNT_INVALID');
   if(surrender.length!==1396) throw Error('SURRENDER_ROW_COUNT_INVALID:'+surrender.length);
   if(death.length!==1396) throw Error('DEATH_ROW_COUNT_INVALID:'+death.length);
@@ -159,13 +165,13 @@ function validateDataset_() {
   surrender.forEach(r=>assertNear_(r.surrender_multiplier,r.surrender_total_usd_25k/EB.BASE_PREMIUM_USD,'SURRENDER_RECONCILIATION:'+r.record_id));
   death.forEach(r=>{if(Math.abs(r.death_total_usd_25k-r.guaranteed_death_value_usd_25k-r.terminal_bonus_usd_25k)>1) throw Error('DEATH_COMPONENT_RECONCILIATION:'+r.record_id); assertNear_(r.death_multiplier,r.death_total_usd_25k/EB.BASE_PREMIUM_USD,'DEATH_RECONCILIATION:'+r.record_id);});
   verifyRegression_(scenarios);
-  return {success:true,incomeCount:incomes.length,surrenderCount:surrender.length,deathCount:death.length,scenarioCount:Object.keys(scenarios).length};
+  return {success:true,incomeCount:d.incomeRates.rates.length,surrenderCount:surrender.length,deathCount:death.length,scenarioCount:Object.keys(scenarios).length};
 }
 function verifyRegression_(s) {
   const a=s['60M_immediate'].years['10'], b=s['60M_deferred'].years['10'], c=s['75M_immediate'].years['10'];
   [['60M immediate surrender',a.surrenderTotal,14210],['60M immediate surrender multiplier',a.surrenderMultiplier,.56840],['60M immediate guaranteed death',a.guaranteedDeathValue,15750],['60M immediate bonus',a.terminalBonus,4475],['60M immediate death',a.deathTotal,20225],['60M immediate death multiplier',a.deathMultiplier,.809],['60M deferred surrender',b.surrenderTotal,18002],['60M deferred surrender multiplier',b.surrenderMultiplier,.72008],['60M deferred death',b.deathTotal,25070],['60M deferred death multiplier',b.deathMultiplier,1.0028],['75M immediate death',c.deathTotal,15900],['75M immediate death multiplier',c.deathMultiplier,.636]].forEach(x=>assertNear_(x[1],x[2],x[0]));
 }
-function ensurePublished_(){if(readDatasetMeta_().status!=='PUBLISHED') throw Error('OFFICIAL_DATASET_NOT_PUBLISHED');}
+function ensurePublished_(){const m=readDatasetMeta_();if(m.status!=='PUBLISHED'||!m.dataset_version||m.published_version!==m.dataset_version)throw Error('OFFICIAL_DATASET_NOT_PUBLISHED');if(!m.source_sha||m.source_sha!==computeSha_())throw Error('OFFICIAL_DATASET_FINGERPRINT_MISMATCH');}
 
 // Browser-bound AVA proof is exchanged server-to-server with the current Platform contract.
 // The browser receives only an opaque App session ID; the signed Platform proof stays in Script Cache.
@@ -264,7 +270,7 @@ function spreadsheet_(){const id=PropertiesService.getScriptProperties().getProp
 function requireSheet_(n){const s=spreadsheet_().getSheetByName(n);if(!s)throw Error('SHEET_NOT_FOUND:'+n);return s;}
 function withLock_(fn){const l=LockService.getScriptLock();if(!l.tryLock(10000))throw Error('WRITE_LOCK_BUSY');try{return fn();}finally{l.releaseLock();}}
 function gender_(x){const v=text_(x);if(v==='男'||v==='M')return'M';if(v==='女'||v==='F')return'F';throw Error('INVALID_GENDER:'+v);}
-function mode_(x){const v=text_(x);if(v==='即期'||v==='immediate')return'immediate';if(v==='延期'||v==='5年延期'||v==='deferred')return'deferred';throw Error('INVALID_MODE:'+v);}
+function mode_(x){const v=text_(x);if(v==='即期'||v==='immediate')return'immediate';if(v==='延期'||v==='5年延期'||v==='5年遞延'||v==='deferred')return'deferred';throw Error('INVALID_MODE:'+v);}
 function datasetStatus_(x){const v=text_(x);if(v==='已準備'||v==='PREPARED')return'PREPARED';if(v==='已發布'||v==='PUBLISHED')return'PUBLISHED';return v||'PREPARED';}
 function scenarioKey_(a,g,m){return String(a)+g+'_'+m;}
 function number_(x){if(typeof x==='number'&&Number.isFinite(x))return x;const n=Number(String(x||'').replace(/,/g,'').replace(/\$/g,'').replace(/%/g,'').trim());if(!Number.isFinite(n))throw Error('INVALID_NUMBER:'+x);return n;}
