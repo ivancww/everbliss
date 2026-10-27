@@ -104,11 +104,11 @@ export function createInitialState() {
   return {
     page: "home", journeyStep: "concern", concern: null,
     desiredMonthlySpending: 0, existingStableIncome: 0,
-    totalRetirementAssets: 0, liquidReserve: 0, liquidReserveMode: "amount", liquidReserveMonths: 12,
+    totalRetirementAssets: 0, liquidReserve: 0, liquidReserveMode: "amount", liquidReserveMonths: 12, liquidReserveYears: null, liquidReserveUnknown: false,
     issueAge: 60, gender: "F", premiumHkd: 195000, scenarioReady: false, accumulation: "immediate",
     selectedFeature: null,
     selectedOutcomeView: "income", selectedPolicyYear: 1, selectedPolicyYearTouched: false,
-    oala: { age: 65, household: "single", currentAssets: 0, currentMonthlyIncome: 0, surrenderProceeds: 0 },
+    oala: { age: 65, household: "single", currentAssets: "", currentMonthlyIncome: "", proposedPremium: "", surrenderProceeds: 0 },
     comparisonVisible: false
   };
 }

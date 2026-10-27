@@ -89,7 +89,7 @@ export const DEFAULT_USER_PRESENTATION = Object.freeze({
   "j05.helper": "而家開始：保證每月收入由保單第1個月開始。5年後開始：保證每月收入由第61個月開始。兩種安排由第85個月起可加入額外每月收入。",
   "j06.explanation": "輸入投保資料和計劃保費，看看可能的退休現金流情境。",
   "j06.premiumLabel": "投入年金保費（HKD）", "j06.helper": "以港元輸入計劃保費。",
-  "j07.explanation": "拖動年齡刻度，查看不同保單年度的安排。",
+  "j07.explanation": "滑動及選擇年齡，查看不同保單年度的安排。",
   "j07.incomeTab": "每年領取", "j07.surrenderTab": "退保價值", "j07.deathTab": "身故賠償",
   "j07.monthlyLabel": "/ 月", "j07.annualLabel": "每年", "j07.year8Extra": "已包括第8年起額外每月收入",
   "j08.title": "一個屬於你嘅退休現金流方向",
