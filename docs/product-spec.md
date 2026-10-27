@@ -24,7 +24,7 @@ The feature hub is separate from the cashflow journey.
 
 1. **F01 健康額外收入:** qualifying Alzheimer's disease / irreversible organic degenerative brain disorders or Parkinson's disease on/after the fifth policy anniversary; additional income is 50% of guaranteed monthly income for up to 120 months, subject to terms.
 2. **F02 靈活／照顧安排:** Income Transfer Option can direct monthly income to a designated recipient for an approved period starting from the fifth anniversary. Advance Income Benefit can advance eligible guaranteed income under events and limits in AIA's current product material.
-3. **F03 身故／家庭安排:** shows cumulative income and a Year-10 death-benefit example. Technical components are expandable. Terminal bonus is non-guaranteed.
+3. F03 is absent from the feature overview. Death-benefit calculations remain available in the result views.
 4. **F04 增值服務:** RetireSmart Health Service is identified as a non-contractual, non-guaranteed service. The page summarizes verified service groups, eligibility tiers, third-party provider and possible direct fees, geographic limitations, and AIA's right to amend, suspend, or terminate service or terms.
 
 ## External support: Old Age Living Allowance

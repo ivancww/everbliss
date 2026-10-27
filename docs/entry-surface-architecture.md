@@ -1,6 +1,6 @@
 # EverBliss entry-surface contract
 
-Release: `v0.4.3`
+Release: `v0.4.4`
 App ID: `everbliss`
 
 EverBliss exposes three App-owned entry surfaces. An absent or unrecognized `avaEntry` defaults to Front.
@@ -32,6 +32,6 @@ This repository prepares the App-side contract; it does not modify or register A
 - Admin: `?avaEntry=admin`
 - Admin proof/session contract: `ava-admin-session-v1`
 - Admin authorization: AVA Platform one-time proof exchanged server-to-server by EverBliss GAS; its signed `adminSessionProof` stays server-side and only an opaque short-lived App session ID is returned to the browser. Each protected operation is checked through Platform `verifyAdminSession`.
-- Release: `v0.4.3`; semantic version is distinct from deployment build ID
+- Release: `v0.4.4`; semantic version is distinct from deployment build ID
 
 AVA Platform remains unchanged in this App PR. Live User Frontstage persistence must pass before Platform enables User. Live GAS deployment, `AVA_PLATFORM_ADMIN_ENDPOINT`, Platform allowlisting, and live Studio proof/read verification must pass before Platform enables Admin.
