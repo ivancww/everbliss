@@ -1,28 +1,31 @@
-# HKMC annuity data — connected source inventory (staging only)
+# Hong Kong Annuity comparison — EverBliss Sheet
 
-## Native Google Sheet created
+## Corrected product-owner data location
 
-- Workbook: [AVA EverBliss — HK Annuity Official Data (Staging)](https://docs.google.com/spreadsheets/d/1wHtZwoqSB_Ch_zzQ2E2zkMU7t54i2RPZpF2HaFhLQNc/edit)
-- Spreadsheet ID: `1wHtZwoqSB_Ch_zzQ2E2zkMU7t54i2RPZpF2HaFhLQNc`
-- Created and populated on 2026-10-27; four tabs verified by readback:
-  - `HK_Annuity_Rates`: 52 age/sex reference rows (ages 60–85; M/F), HK$1,000,000 reference premium, example monthly amount and guarantee months
-  - `HK_Annuity_Rules`: source-linked rules and explicit missing-formula flags
-  - `HK_Annuity_Values`: schema for surrender/death benefits; monetary amounts **not verified** and intentionally blank
-  - `HK_Annuity_Sources`: provenance and reference-only verification status
+The source of truth is the EXISTING private [AVA - EverBliss Google Sheet](https://docs.google.com/spreadsheets/d/1BwXsIQ8bTxGo-91vgaackwQwYJBEHn8f_eL4hXjhY3k/edit), spreadsheet ID `1BwXsIQ8bTxGo-91vgaackwQwYJBEHn8f_eL4hXjhY3k`.
 
-## Source limitations
+New tab: `香港年金_領取金額及百分比` (range `A1:D53`), verified by readback 2026-10-27. The 52 data rows cover issue ages 60–85, male/female.
 
-The accompanying CSV transcribes the HKMC reference example: https://www.hkmca.hk/eng/files/LAS60_Example_of_Guaranteed_Monthly_Annuity_Payment_Table_Eng.pdf. The document has no effective date and calls the values reference-only. **Do not treat these rows as current customer quotations.** Do not scale the HK$1m figures to other premiums without verifying official scaling/rounding rules. Do not extrapolate outside supported ages. Do not invent surrender or death values.
+Columns, and ONLY columns requested by the product owner:
+1. `投保年齡` (issue age)
+2. `性別` (男/女)
+3. `每月領取金額（每HK$1,000,000）`
+4. `每年領取百分比（%）` = monthly amount × 12 ÷ 1,000,000 × 100
 
-## Application integration status
+The percent is a **simple annual payout-to-premium ratio**, NOT IRR, investment yield or guaranteed annual return. The figures are from an HKMC reference-only example, not verified current quotations. Source: https://www.hkmca.hk/eng/files/LAS60_Example_of_Guaranteed_Monthly_Annuity_Payment_Table_Eng.pdf. Do not scale to arbitrary premiums without independently verifying the official calculation rules.
 
-**NOT CONNECTED.** Creating and populating the native Google Sheet does not authorize the GitHub Pages application to read it. The existing EverBliss GAS adapter is for EverBliss records, not an approved HKMC feed. The sheet is not a public JSON API, and its spreadsheet ID is not an authentication credential.
+## Scope correction
 
-Before enabling comparison values:
-1. Confirm an approved read-only transport, access controls and any GAS deployment authorization; do not publish a private Sheet or embed service-account credentials in browser code.
-2. Implement a versioned, validated read-only data contract (rates/rules/values/sources), with explicit `verification_status`, effective date, caching and error handling.
-3. Verify current HKMC rates, eligibility, premium scaling, payment timing, surrender/death formulas against current official documents.
-4. Wire the comparison to existing journey inputs; never add duplicate premium/age fields.
-5. Test missing, stale, unsupported and unauthorized data. Until verified, render `暫無官方數據` rather than a fabricated amount.
+Do NOT create or require `HK_Annuity_Rules`, `HK_Annuity_Values`, `HK_Annuity_Sources` or separate HKMC Google Sheet tabs in the EverBliss workbook. Do not add guarantee-period, surrender, death, verification or source columns to the product-owner's four-column tab. Keep necessary provenance/validation in this repository documentation and transport contract instead.
 
-**PR #12 must remain open and unmerged until the product-owner-approved data transport and comparison are validated.**
+The previously created separate staging workbook is obsolete and is NOT the app data source. It has not been deleted.
+
+## Integration gate
+
+The new tab is populated and verified, but **the application is NOT yet connected to it**. Do not embed private Sheet credentials or expose the workbook. The current EverBliss GAS adapter does not yet expose this tab through an approved, tested read-only endpoint.
+
+Implement the app-side read contract through the existing authorized EverBliss GAS transport, after verifying the GAS source and obtaining any necessary deployment approval. Read and validate the exact four-column table; require 52 unique age/sex rows, supported age range, positive finite amounts, and mathematically consistent percentages. Handle missing/unverified data without fabricating figures.
+
+The Journey comparison must reuse the existing total capital, age, sex and selected year. The government side may show the reference monthly amount/ratio only with a clear reference-example qualification, and must not imply verified current rates or arbitrary-premium quotes. Unsupported surrender/death amounts remain `暫無官方數據`.
+
+PR #12 remains open; no merge or deployment before a real end-to-end read and comparison QA.
