@@ -55,10 +55,6 @@ export const PRESENTATION_FIELDS = Object.freeze([
   { section: "FEATURES", path: "features.F02.description", label: "F02 說明" },
   { section: "FEATURES", path: "features.F02.visible", label: "顯示 F02", type: "boolean" },
   { section: "FEATURES", path: "features.F02.order", label: "F02 順序", type: "number" },
-  { section: "FEATURES", path: "features.F03.title", label: "F03 標題" },
-  { section: "FEATURES", path: "features.F03.description", label: "F03 說明" },
-  { section: "FEATURES", path: "features.F03.visible", label: "顯示 F03", type: "boolean" },
-  { section: "FEATURES", path: "features.F03.order", label: "F03 順序", type: "number" },
   { section: "FEATURES", path: "features.F04.title", label: "F04 標題" },
   { section: "FEATURES", path: "features.F04.description", label: "F04 說明" },
   { section: "FEATURES", path: "features.F04.visible", label: "顯示 F04", type: "boolean" },
@@ -99,7 +95,6 @@ export const DEFAULT_USER_PRESENTATION = Object.freeze({
   "features.title": "計劃特點", "features.description": "按你想了解的部分逐一查看；功能適用條件以產品條款為準。",
   "features.F01.title": "健康額外收入", "features.F01.description": "了解指定健康情況下的額外每月收入。", "features.F01.visible": true, "features.F01.order": 1,
   "features.F02.title": "靈活／照顧安排", "features.F02.description": "了解收款安排與預支收入選項。", "features.F02.visible": true, "features.F02.order": 2,
-  "features.F03.title": "身故／家庭安排", "features.F03.description": "看看已收取收入與第10保單年度的身故利益示例。", "features.F03.visible": true, "features.F03.order": 3,
   "features.F04.title": "增值服務", "features.F04.description": "查看非合約式的 RetireSmart Health Service 資訊。", "features.F04.visible": true, "features.F04.order": 4,
   "oala.explanation": "了解年金安排在長者生活津貼資產及入息審查下的處理方式。",
   "oala.sectionLabel": "年金安排前後初步試算", "oala.homeCardVisible": true

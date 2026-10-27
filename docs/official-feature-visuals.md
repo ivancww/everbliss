@@ -5,3 +5,7 @@ Source: owner-provided AIA 優悅年金保險計劃 product brochure (22 PDF pag
 The brochure describes additional income as 50% of the guaranteed payment at the relevant time, after approval for a specified diagnosis and while alive, for up to 120 months. Non-guaranteed payments can vary or be zero. Advance payments are payments brought forward, subject to the anniversary and policy limits, not an additional benefit. The leaflet permits the insured to share the five basic Part 2 sessions with up to two eligible parents or spouse; eligible higher-tier customers can receive 20 additional sessions. The insurer and independent provider terms govern all service availability.
 
 The health calculation uses the existing product engine and the standard HKD display conversion; no product formulas or data changed. The customer brochure example is illustrative. Real-device layout and image legibility remain unverified. PR #9 is merged on main at v0.4.2; this integrated change targets v0.4.3.
+
+
+## v0.4.4 update
+The case portrait and healthy-ageing hero were removed from the app and precache. The remaining public brochure graphics require image reuse permission for public deployment. The AIA customer product page and brochure confirm the income allocation option starts at the fifth policy anniversary, subject to no outstanding policy debt, approval and due diligence; spouse or children are illustrative examples from AIA public guidance. The customer brochure did not establish a minimum recipient age; no age restriction is asserted.
