@@ -71,6 +71,7 @@ function publicAction_(action) {
     case 'getSurrenderMultipliers': ensurePublished_(); return {success:true,surrenderMultipliers:readSurrender_()};
     case 'getDeathMultipliers': ensurePublished_(); return {success:true,deathMultipliers:readDeath_()};
     case 'getOfficialDataset': ensurePublished_(); return {success:true,dataset:buildDataset_()};
+    case 'getHKAnnuityRates': return getHKAnnuityRates_();
     default: throw Error('ACTION_NOT_ALLOWED');
   }
 }
@@ -239,3 +240,57 @@ function date_(x){if(!x)return'';if(Object.prototype.toString.call(x)==='[object
 function assertNear_(a,b,label){if(!Number.isFinite(a)||Math.abs(a-b)>1e-9)throw Error('REGRESSION_FAILED:'+label+':'+a+'!='+b);}
 function safeError_(e){return String(e&&e.message||'INTERNAL_ERROR').slice(0,240);}
 function json_(v){return ContentService.createTextOutput(JSON.stringify(v)).setMimeType(ContentService.MimeType.JSON);}
+
+/**
+ * Hong Kong Annuity — reference-only monthly payout and annual payout percentage.
+ * Read-only: the EXISTING AVA - EverBliss Google Sheet, no additional tabs.
+ * Not a current quotation or investment yield.
+ */
+function getHKAnnuityRates_() {
+  const sheet = spreadsheet_().getSheetByName('香港年金_領取金額及百分比');
+  if (!sheet) throw Error('HK_ANNUITY_SHEET_NOT_FOUND');
+  const values = sheet.getDataRange().getValues();
+  const headers = ['投保年齡', '性別', '每月領取金額（每HK$1,000,000）', '每年領取百分比（%）'];
+  if (values.length !== 53 || values[0].length !== 4 ||
+      headers.some((header, i) => String(values[0][i]).trim() !== header)) {
+    throw Error('HK_ANNUITY_SCHEMA_INVALID');
+  }
+  const seen = new Set();
+  const rates = values.slice(1).map((r, i) => {
+    const issueAge = Number(r[0]);
+    const gender = r[1] === '男' ? 'M' : r[1] === '女' ? 'F' : '';
+    const monthlyPaymentHkd = Number(r[2]);
+    const annualPayoutPercent = Number(r[3]);
+    const key = issueAge + '-' + gender;
+    if (!Number.isInteger(issueAge) || issueAge < 60 || issueAge > 85 ||
+        !gender || !Number.isFinite(monthlyPaymentHkd) || monthlyPaymentHkd <= 0 ||
+        !Number.isFinite(annualPayoutPercent) || annualPayoutPercent <= 0 ||
+        seen.has(key)) throw Error('HK_ANNUITY_INVALID_ROW:' + (i + 2));
+    if (Math.abs(annualPayoutPercent - monthlyPaymentHkd * 12 / 10000) > 0.0001) {
+      throw Error('HK_ANNUITY_PERCENT_MISMATCH:' + key);
+    }
+    seen.add(key);
+    return {issueAge, gender, referencePremiumHkd:1000000,
+      monthlyPaymentHkd, annualPayoutPercent};
+  });
+  for (let age = 60; age <= 85; age++) {
+    for (const gender of ['M', 'F']) {
+      if (!seen.has(age + '-' + gender)) throw Error('HK_ANNUITY_MISSING_ROW');
+    }
+  }
+  return {success:true, schemaVersion:1, product:'HK_ANNUITY',
+    status:'REFERENCE_ONLY_NOT_CURRENT_VERIFIED',
+    rateBasis:'HKD_1000000_SINGLE_PREMIUM',
+    percentageMeaning:'ANNUAL_PAYOUT_TO_PREMIUM',
+    count:rates.length, rates};
+}
+
+function testHKAnnuityRates() {
+  const result = getHKAnnuityRates_();
+  const male60 = result.rates.find(r => r.issueAge === 60 && r.gender === 'M');
+  const female60 = result.rates.find(r => r.issueAge === 60 && r.gender === 'F');
+  if (result.count !== 52 || male60?.monthlyPaymentHkd !== 5100 ||
+      female60?.monthlyPaymentHkd !== 4700) throw Error('HK_ANNUITY_SMOKE_TEST_FAILED');
+  Logger.log(JSON.stringify({success:true,count:result.count,male60,female60}));
+  return result;
+}
