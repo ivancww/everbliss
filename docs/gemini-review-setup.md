@@ -7,3 +7,5 @@ The test job runs the checked-out PR without Google credentials. The review job 
 Before PR #7 is merged, its owner-controlled branch can run the restricted bootstrap for PR #8 at the exact reviewed SHA. After owner approval and merge, `pull_request_target` uses the trusted main-branch workflow for same-repository PRs. The workflow rejects stale HEADs, unsupported forks, oversized input and changes to excluded Official data or GAS. A SHA marker prevents duplicate comments. The review publishes only if the PR HEAD remains unchanged.
 
 A successful API request and advisory review do not prove code correctness or authorize a merge. Verify model identity, report evidence and findings, then repair and independently re-review as necessary. Automated Codex repair, three-cycle orchestration and owner notifications are not implemented. The API-key pilot requires no Vertex or WIF configuration.
+
+The review defaults to `gemini-3.8-flash`. A `GEMINI_MODEL` override must match this value; the job rejects other values and verifies the model reported by Gemini before publishing. Duplicate suppression is keyed by reviewed HEAD and model.

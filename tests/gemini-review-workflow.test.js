@@ -19,7 +19,10 @@ test('credential job uses trusted rules and does not execute reviewed PR code',(
 test('review is bounded, bound to exact head and prevents duplicate reports',()=>{
   assert.match(workflow,/ad3c360f27bbd0aabd94264122c30996469e9865/);
   assert.match(workflow,/\[ "\$CURRENT" = "\$HEAD" \]/);
-  assert.match(workflow,/ava-gemini-review:\$HEAD/);
+  assert.match(workflow,/ava-gemini-review:\$HEAD:gemini-3\.8-flash/);
+  assert.match(workflow,/Actual model is not gemini-3\.8-flash/);
+  assert.match(workflow,/GEMINI_MODEL must be gemini-3\.8-flash/);
+  assert.doesNotMatch(workflow,/gemini-3\.6-flash/);
   assert.match(workflow,/180000/);assert.match(workflow,/350000/);
   assert.match(workflow,/PR HEAD changed during review/);
 });

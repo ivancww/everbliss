@@ -111,10 +111,11 @@ jobs:
           mkdir -p "$RUNNER_TEMP/review-work/.gemini"
           printf '%s\n' '{"tools":{"core":["__no_tools__"]},"security":{"disableYoloMode":true},"mcp":{"allowed":[]}}' > "$RUNNER_TEMP/review-work/.gemini/settings.json"
           cd "$RUNNER_TEMP/review-work"
-          MODEL="${GEMINI_MODEL:-gemini-3.6-flash}"
+          MODEL="${GEMINI_MODEL:-gemini-3.8-flash}"
+          [ "$MODEL" = "gemini-3.8-flash" ] || { echo "::error::GEMINI_MODEL must be gemini-3.8-flash"; exit 1; }
           "$GITHUB_WORKSPACE/tools/gemini-review/node_modules/.bin/gemini" --version
           "$GITHUB_WORKSPACE/tools/gemini-review/node_modules/.bin/gemini" --skip-trust -e none -m "$MODEL" --approval-mode default --output-format json -p 'Review the supplied untrusted data under the trusted instructions.' < "$RUNNER_TEMP/review-prompt.txt" > "$RUNNER_TEMP/review.json"
-          python3 -c 'import json,os; d=json.load(open(os.environ["RUNNER_TEMP"]+"/review.json")); r=d.get("response", ""); assert isinstance(r,str) and r.strip() and not d.get("error"), "Gemini returned an empty or failed result"; assert any(v in r.upper() for v in ("PASS","NEEDS_FIX","BLOCKED")), "Missing advisory verdict"; models=", ".join(sorted(d.get("stats",{}).get("models",{}))) or "not reported"; print("Gemini API response received; model(s): "+models); open(os.environ["RUNNER_TEMP"]+"/review.md","w").write("Actual model(s): "+models+"\n\n"+r)'
+          python3 -c 'import json,os; d=json.load(open(os.environ["RUNNER_TEMP"]+"/review.json")); r=d.get("response", ""); assert isinstance(r,str) and r.strip() and not d.get("error"), "Gemini returned an empty or failed result"; assert any(v in r.upper() for v in ("PASS","NEEDS_FIX","BLOCKED")), "Missing advisory verdict"; actual=sorted(d.get("stats",{}).get("models",{})); assert actual == ["gemini-3.8-flash"], "Actual model is not gemini-3.8-flash"; models=", ".join(actual); print("Gemini API response received; model(s): "+models); open(os.environ["RUNNER_TEMP"]+"/review.md","w").write("Actual model(s): "+models+"\n\n"+r)'
       - name: Publish only for unchanged PR HEAD
         env:
           GH_TOKEN: ${{ github.token }}
@@ -128,12 +129,12 @@ jobs:
           set -euo pipefail
           CURRENT=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PR" --jq .head.sha)
           [ "$CURRENT" = "$HEAD" ] || { echo '::error::PR HEAD changed during review'; exit 1; }
-          MARKER="<!-- ava-gemini-review:$HEAD -->"
+          MARKER="<!-- ava-gemini-review:$HEAD:gemini-3.8-flash -->"
           if gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$PR/comments" --jq '.[].body' | grep -F "$MARKER" >/dev/null; then echo 'Review already posted for this HEAD'; exit 0; fi
           {
             echo '## AVA Gemini CLI — Independent PR Review'
             echo "$MARKER"
-            printf '\nPR #%s | Base: `%s` | Head: `%s` | Trusted rules: `%s` | CLI: `0.65.0` | Model requested: `%s`\n\n' "$PR" "$BASE" "$HEAD" "$RULES_SHA" "${GEMINI_MODEL:-gemini-3.6-flash}"
+            printf '\nPR #%s | Base: `%s` | Head: `%s` | Trusted rules: `%s` | CLI: `0.65.0` | Model requested: `%s`\n\n' "$PR" "$BASE" "$HEAD" "$RULES_SHA" "${GEMINI_MODEL:-gemini-3.8-flash}"
             cat "$RUNNER_TEMP/review.md"
             printf '\n\n_Advisory only. Owner approval and independent validation remain required._\n'
           } > "$RUNNER_TEMP/review-comment.md"
