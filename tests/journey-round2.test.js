@@ -54,7 +54,7 @@ test("J02, J03, OALA and J07 presentation contracts remain in the single frontst
   assert.match(source, /selectedPolicyYearTouched\?state\.selectedPolicyYear:/);
   assert.match(source, /liquidity-reserve-value/);
   assert.match(source, /updateLiquiditySummary\(\)/);
-  assert.match(source, /p\["j07\.year8Extra"\]/);
+
   assert.doesNotMatch(source, /year-chip|數據來源|插值錨點|premium scaling|Official anchor/i);
   const timing = source.slice(source.indexOf("function renderTiming()"), source.indexOf("function renderSummary()"));
   const resultCard = source.slice(source.indexOf("function resultPhase("), source.indexOf("function renderSummary()"));
@@ -62,9 +62,9 @@ test("J02, J03, OALA and J07 presentation contracts remain in the single frontst
   assert.doesNotMatch(timing, /非保證每月收入|非保證入息/);
   assert.match(timing, /p\["j05.helper"\]/);
   const presentation = await fs.readFile(path.join(root, "src/data/presentation/user-config.js"), "utf8");assert.match(presentation, /第85個月起可加入額外每月收入/);
-  assert.match(resultCard, /p\["j07.year8Extra"\]/);
+
   assert.match(presentation, /已包括第8年起額外每月收入/);
-  assert.match(resultCard, /額外收入並非保證，實際金額可能較高、較低，甚至為零。/);
+  assert.doesNotMatch(resultCard, /class="disclosure"/);
   assert.doesNotMatch(resultCard, /非保證入息|利息/);
   assert.match(presentation, /兩種安排由第85個月起可加入額外每月收入/);
   assert.doesNotMatch(summary, /額外收入並非保證，實際金額可能較高、較低，甚至為零。/);

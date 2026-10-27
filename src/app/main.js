@@ -43,6 +43,8 @@ let adminDraftError = "";
 let officialEndpoint = "";
 let runtimeHkdPerUsd = fxConfig.rate;
 let scenarioReady = false;
+let comparisonOpen = false;
+let comparisonTab = "income";
 const scheduleAfterPaint=callback=>typeof requestAnimationFrame==="function"?requestAnimationFrame(()=>setTimeout(callback,0)):setTimeout(callback,0);
 
 let saveQueue = Promise.resolve();
@@ -79,13 +81,21 @@ function renderResult(){
   const years=outcome.schedule;const selectedYear=Math.min(Math.max(1,n(state.selectedPolicyYear)||1),years.length);const row=years[selectedYear-1];const view=state.selectedOutcomeView||"income";const fx=getDisplayFxRate();
   const income=view==="income";const raw=income?row.annualDisplayedIncome:view==="surrender"?row.surrenderValue:row.deathBenefit;const amount=raw===null?"暫未提供":formatOutcomeAmount(raw,fx).amount;const monthly=formatOutcomeAmount(row.annualDisplayedIncome/12,fx).amount;const annual=formatOutcomeAmount(row.annualDisplayedIncome,fx).amount;
   const p=present();const primary=income?`${monthly} ${presentationText("j07.monthlyLabel",p["j07.monthlyLabel"])}`:amount;const secondary=income?`${presentationText("j07.annualLabel",p["j07.annualLabel"])} ${annual}`:"";
-  const phase=income?resultPhase(row.policyYear):view==="surrender"?"退保價值":"身故賠償";const hasExtra=income&&row.policyYear>=8&&row.annualNonGuaranteedIncome>0;
+  const phase=income?resultPhase(row.policyYear):view==="surrender"?"退保價值":"身故賠償";
   return journeyShell(cardStart("每年退休安排",stepTitles.result,presentationText("j07.explanation",p["j07.explanation"]))+
     `<div class="segmented" role="tablist" aria-label="結果類別">${[["income",p["j07.incomeTab"]],["surrender",p["j07.surrenderTab"]],["death",p["j07.deathTab"]]].map(([v,t])=>`<button class="segment ${view===v?"active":""}" role="tab" aria-selected="${view===v}" data-outcome="${v}">${html(t)}</button>`).join("")}</div>`+
     `<div class="outcome-slider-wrap"><div class="outcome-age"><strong data-result-age>${row.attainedAge}歲</strong><span data-result-policy-year>第${row.policyYear}保單年度</span></div><div class="age-tiles" role="group" aria-label="選擇年齡及保單年度">${years.map(item=>`<button type="button" class="age-tile ${item.policyYear===selectedYear?"selected":""}" data-year="${item.policyYear}" aria-pressed="${item.policyYear===selectedYear}"><strong>${item.attainedAge}歲</strong><span>第${item.policyYear}年</span></button>`).join("")}</div></div>`+
     `<div class="result-hero outcome-card"><div class="income-primary"><div class="label" data-result-phase>${phase}</div><div class="result-amount" data-result-primary>${primary}</div><div class="result-caption" data-result-secondary>${secondary}</div></div>${income?`<div class="income-cumulative"><span>至${row.attainedAge}歲累計已領取</span><strong>${formatOutcomeAmount(cumulativeScheduledIncome(years,selectedYear),fx).amount}</strong></div>`:""}</div>`+
-    `${hasExtra?`<div class="disclosure">${presentationText("j07.year8Extra",p["j07.year8Extra"])}。額外收入並非保證，實際金額可能較高、較低，甚至為零。</div>`:""}`+
-    `<div class="button-row"><button class="button secondary" data-action="back">返回修改</button><button class="button" data-action="summary">查看規劃摘要 →</button></div>`);
+    `<div class="button-row"><button class="button secondary" data-action="back">返回修改</button><button class="button" data-action="summary">查看規劃摘要 →</button></div>`+renderAnnuityComparison(outcome,row,selectedYear,fx));
+}
+
+function renderAnnuityComparison(outcome,row,year,fx){
+  const format = value => value == null ? "暫無官方數據" : formatOutcomeAmount(value,fx).amount;
+  const cumulative=cumulativeScheduledIncome(outcome.schedule,year);
+  const payout=row.annualDisplayedIncome/12;
+  const value=comparisonTab==="surrender"?row.surrenderValue:row.deathBenefit;
+  const rows=comparisonTab==="income"?[["每月收入",format(payout)],["開始領取",state.accumulation==="immediate"?"即期":"5年後"],["累積已收",format(cumulative)]]:comparisonTab==="surrender"?[["退保金額",format(value)],["累積已收年金",format(cumulative)],["合計價值",format(value==null?null:value+cumulative)]]:[["身故賠償",format(value)],["此前累積已收","暫無官方數據"],["合計利益","暫無官方數據"]];
+  return `<details class="annuity-comparison" data-comparison ${comparisonOpen?"open":""}><summary><strong>香港年金 vs 優悅年金</strong><span>同一保費 · 每月收入 · 退保 · 身故賠償</span></summary><div class="comparison-products"><div><h3>香港年金計劃</h3><span>每月年金收入</span><strong>暫無官方數據</strong></div><div><h3>AIA 優悅年金</h3><span>每月收入＋額外收入</span><strong>${format(payout)}</strong></div></div><p>香港年金以整付保費為準；開始時間及投保資格可能不同。優悅年金額外收入並非保證，須符合適用條款。</p><div class="segmented" role="group" aria-label="比較類別">${[["income","每月收入"],["surrender","退保"],["death","身故賠償"]].map(([key,label])=>`<button type="button" class="segment ${comparisonTab===key?"active":""}" data-comparison-tab="${key}" aria-pressed="${comparisonTab===key}">${label}</button>`).join("")}</div><div class="comparison-table"><table><thead><tr><th>比較項目</th><th>香港年金</th><th>優悅年金</th></tr></thead><tbody>${rows.map(([label,aia])=>`<tr><th scope="row">${label}</th><td>暫無官方數據</td><td>${aia}</td></tr>`).join("")}</tbody></table></div></details>`;
 }
 
 function renderConcept(){const p=present();return journeyShell(cardStart("退休收入點樣安排",stepTitles.concept,presentationText("j04.explanation",p["j04.explanation"]))+`<div class="concept-grid"><div class="concept-box"><strong>${presentationText("j04.beforeLabel",p["j04.beforeLabel"])}</strong><span>收入 → 累積財富</span></div><div class="concept-arrow" aria-hidden="true">→</div><div class="concept-box accent"><strong>${presentationText("j04.afterLabel",p["j04.afterLabel"])}</strong><span>部分資產 → 每月現金流／長糧</span></div></div><div class="callout">${presentationText("j04.support",p["j04.support"])} 這不代表所有財務需要都獲保證，亦不代表本金不會減少。</div>${nextButton()}`);}
@@ -131,7 +141,9 @@ root.addEventListener("change",async event=>{if(!event.target.matches("[data-res
 root.addEventListener("input",event=>{if(event.target.matches("[data-presentation-edit], [data-user-value], [data-user-list-item]"))readUserConfigFromEditor();});
 root.addEventListener("change",event=>{if(event.target.matches("[data-field]")){readJourneyInputs();if(state.page==="income")updateRetirementGap();if(state.page==="liquidity")updateLiquiditySummary();persist();}if(event.target.matches("[data-oala]")){readOalaInputs();updateOalaResults();persist();}});
 root.addEventListener("blur",event=>{if(event.target.matches("[data-field]")){readJourneyInputs();persist();}if(event.target.matches("[data-oala]")){readOalaInputs();persist();}},{capture:true});
+root.addEventListener("toggle",event=>{if(event.target.matches("[data-comparison]"))comparisonOpen=event.target.open;},true);
 root.addEventListener("click",async event=>{
+  const comparisonChoice=event.target.closest("[data-comparison-tab]");if(comparisonChoice){comparisonOpen=true;comparisonTab=comparisonChoice.dataset.comparisonTab;render();return;}
   const listMove=event.target.closest("[data-list-move]");if(listMove&&userEdit&&userEditing&&!previewMode){event.preventDefault();event.stopPropagation();readUserConfigFromEditor();const list=[...(pendingUserValues["j01.concernChoices"]||[])],index=Number(listMove.dataset.listIndex),next=index+(listMove.dataset.listMove==="up"?-1:1);if(next>=0&&next<list.length){[list[index],list[next]]=[list[next],list[index]];pendingUserValues={...pendingUserValues,"j01.concernChoices":list};render();}return;}
   if(userEdit&&userEditing&&!previewMode&&event.target.closest("[contenteditable=true]")){event.preventDefault();event.stopPropagation();return;}if(userEdit&&userEditing&&!previewMode&&event.target.closest("[data-user-value]")){event.preventDefault();event.stopPropagation();readUserConfigFromEditor();render();return;}
   const resetSection=event.target.closest("[data-reset-section]");if(resetSection&&userEdit){readUserConfigFromEditor();pendingUserValues=resetPresentationSection(pendingUserValues,resetSection.dataset.resetSection);render();return;}
