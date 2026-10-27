@@ -27,3 +27,32 @@ export function assessment({household, assets, income, premium, issueAge, gender
   const monthly = Math.round(row.annualDisplayedIncome / 12 * Number(fx));
   return {before, after:assessLimits(a-p, i+monthly, household), outcome:{monthly, row, schedule:outcome.schedule}, reason:null, provisional:true};
 }
+
+// Preserve the logical caret across inserted thousands separators; invalid input remains invalid.
+export function formatAssessmentInput(value, caret = String(value).length) {
+  const original = String(value);
+  if (!/^[\d,]*(?:\.\d*)?$/.test(original)) return { value: original, caret, number: null };
+  const raw = original.replace(/,/g, '');
+  const logical = original.slice(0, caret).replace(/,/g, '').length;
+  const parts = raw.split('.');
+  const whole = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  const formatted = whole + (parts.length > 1 ? '.' + parts[1] : '');
+  let pos = 0, count = 0;
+  while (pos < formatted.length && count < logical) { if (formatted[pos] !== ',') count++; pos++; }
+  return { value: formatted, caret: pos, number: parseAssessmentAmount(raw) };
+}
+export function allowanceIllustration(result) {
+  if (!result?.after?.within || !result.outcome) return null;
+  return { annuity: result.outcome.monthly, allowance: oalaData.monthlyBenefit, total: result.outcome.monthly + oalaData.monthlyBenefit, recipients: 1 };
+}
+
+export function deleteAcrossSeparator(value, caret, direction) {
+  const backward = direction === 'deleteContentBackward';
+  if (!backward && direction !== 'deleteContentForward') return null;
+  const comma = backward ? caret - 1 : caret;
+  if (value[comma] !== ',') return null;
+  const digit = backward ? comma - 1 : comma + 1;
+  if (!/\d/.test(value[digit] || '')) return null;
+  const next = value.slice(0, digit) + value.slice(digit + 1);
+  return formatAssessmentInput(next, backward ? digit : caret);
+}
