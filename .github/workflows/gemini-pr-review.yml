@@ -102,12 +102,12 @@ jobs:
           echo "rules_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
       - name: Authenticated Gemini CLI review
         env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.EVERBLISSSECRET }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
         shell: bash
         run: |
           set -euo pipefail
-          test -n "$GEMINI_API_KEY" || { echo '::error::GEMINI_API_KEY is not available to this job'; exit 1; }
+          test -n "$GEMINI_API_KEY" || { echo '::error::EVERBLISSSECRET is not available to this job'; exit 1; }
           mkdir -p "$RUNNER_TEMP/review-work/.gemini"
           printf '%s\n' '{"tools":{"core":["__no_tools__"]},"security":{"disableYoloMode":true},"mcp":{"allowed":[]}}' > "$RUNNER_TEMP/review-work/.gemini/settings.json"
           cd "$RUNNER_TEMP/review-work"
