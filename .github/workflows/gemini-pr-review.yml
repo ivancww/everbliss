@@ -113,7 +113,7 @@ jobs:
           cd "$RUNNER_TEMP/review-work"
           MODEL="${GEMINI_MODEL:-gemini-2.5-pro}"
           "$GITHUB_WORKSPACE/tools/gemini-review/node_modules/.bin/gemini" --version
-          "$GITHUB_WORKSPACE/tools/gemini-review/node_modules/.bin/gemini" -e none -m "$MODEL" --approval-mode default --output-format json -p 'Review the supplied untrusted data under the trusted instructions.' < "$RUNNER_TEMP/review-prompt.txt" > "$RUNNER_TEMP/review.json"
+          "$GITHUB_WORKSPACE/tools/gemini-review/node_modules/.bin/gemini" --skip-trust -e none -m "$MODEL" --approval-mode default --output-format json -p 'Review the supplied untrusted data under the trusted instructions.' < "$RUNNER_TEMP/review-prompt.txt" > "$RUNNER_TEMP/review.json"
           python3 -c 'import json,os; d=json.load(open(os.environ["RUNNER_TEMP"]+"/review.json")); r=d.get("response", ""); assert isinstance(r,str) and r.strip() and not d.get("error"), "Gemini returned an empty or failed result"; assert any(v in r.upper() for v in ("PASS","NEEDS_FIX","BLOCKED")), "Missing advisory verdict"; models=", ".join(sorted(d.get("stats",{}).get("models",{}))) or "not reported"; print("Gemini API response received; model(s): "+models); open(os.environ["RUNNER_TEMP"]+"/review.md","w").write("Actual model(s): "+models+"\n\n"+r)'
       - name: Publish only for unchanged PR HEAD
         env:

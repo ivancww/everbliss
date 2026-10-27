@@ -10,6 +10,8 @@ test('credential job uses trusted rules and does not execute reviewed PR code',(
   assert.match(workflow,/cat docs\/review\/AVA-GEMINI-SHARED\.md GEMINI\.md/);
   assert.doesNotMatch(workflow,/git show "\$HEAD:(?:GEMINI\.md|docs\/review\/AVA-GEMINI-SHARED\.md)"/);
   assert.match(workflow,/tools.*core.*__no_tools__/);
+  assert.match(workflow,/cd "\$RUNNER_TEMP\/review-work"/);
+  assert.match(workflow,/--skip-trust -e none/);
   assert.match(workflow,/npm ci --prefix tools\/gemini-review --ignore-scripts --omit=optional/);
   assert.doesNotMatch(workflow,/id-token:\s*write|--yolo/);
   assert.equal(lock.packages['node_modules/@google/gemini-cli'].version,'0.65.0');
