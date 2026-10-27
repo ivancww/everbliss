@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { assessment, assessLimits, parseAssessmentAmount } from '../src/app/oala-assessment.js';
+import { assessment, assessLimits, parseAssessmentAmount, formatAssessmentInput, deleteAcrossSeparator, allowanceIllustration } from '../src/app/oala-assessment.js';
 import { resetNavigationForAvaEntry } from '../src/app/entry-surfaces.js';
 import { calculateOutcome } from '../src/calculations/full-outcomes.js';
 
@@ -23,7 +23,7 @@ test('invalid and excessive inputs never fabricate a result',()=>{
  assert.equal(assessment({...base,assets:'',premium:'500000'}).after,null);
 });
 test('official notes and update contract remain explicit',()=>{
- const s=fs.readFileSync('src/app/main.js','utf8');assert.match(s,/function oalaNotes\(\)/);assert.match(s,/<details><summary>社署資料/);assert.doesNotMatch(s,/<details open/);assert.match(s,/尚待社署確認/);assert.match(s,/id="oala-years"/);assert.match(s,/updateOalaResults\(\)/);
+ const s=fs.readFileSync('src/app/main.js','utf8');assert.match(s,/function oalaNotes\(\)/);assert.match(s,/<details><summary>\$\{title\}/);assert.doesNotMatch(s,/<details open/);assert.match(s,/尚待社署確認/);assert.match(s,/id="oala-years"/);assert.match(s,/updateOalaResults\(\)/);
  assert.match(fs.readFileSync('src/pwa/sw-template.js','utf8'),/oala-assessment\.js/);
 });
 
@@ -38,4 +38,34 @@ test('rapid queued state saves retain snapshots in order without rolling back li
  const state={oala:{currentAssets:'1'}};const snapshots=[];const ctx={state,structuredClone,Promise,saveAppState:async snapshot=>{snapshots.push(snapshot.oala.currentAssets);await new Promise(r=>setTimeout(r,5));return snapshot;}};
  await vm.runInNewContext(fn+`; (async()=>{const a=persist();state.oala.currentAssets='12';const b=persist();await Promise.all([a,b]);})()`,ctx);
  assert.deepEqual(snapshots,['1','12']);assert.equal(state.oala.currentAssets,'12');
+});
+
+test('live amount formatting preserves numeric values and caret across edits and paste',()=>{
+ assert.deepEqual(formatAssessmentInput('500000',6),{value:'500,000',caret:7,number:500000});
+ assert.deepEqual(formatAssessmentInput('1000000',7),{value:'1,000,000',caret:9,number:1000000});
+ assert.deepEqual(formatAssessmentInput('12,345',2),{value:'12,345',caret:2,number:12345});
+ assert.deepEqual(formatAssessmentInput('',0),{value:'',caret:0,number:null});
+ assert.equal(formatAssessmentInput('0',1).number,0);
+ assert.equal(formatAssessmentInput('12a',3).number,null);
+ assert.equal(deleteAcrossSeparator('1,000',2,'deleteContentBackward').value,'000');
+ assert.equal(deleteAcrossSeparator('1,000',1,'deleteContentForward').value,'100');
+});
+test('conditional income illustration counts one recipient only and excludes failed assessments',()=>{
+ const r=assessment(base); const v=allowanceIllustration(r);
+ assert.equal(v.recipients,1);assert.equal(v.allowance,4345);assert.equal(v.total,r.outcome.monthly+4345);
+ assert.equal(allowanceIllustration(assessment({...base,income:16680})),null);
+ assert.equal(allowanceIllustration(assessment({...base,assets:2000000})),null);
+ assert.equal(allowanceIllustration(assessment({...base,premium:'900000'})),null);
+ assert.deepEqual(allowanceIllustration({after:{within:true},outcome:{monthly:1655}}),{annuity:1655,allowance:4345,total:6000,recipients:1});
+});
+test('four independent official topics precede limits and comparison',async()=>{
+ const vm=await import('node:vm');const s=fs.readFileSync('src/app/main.js','utf8');
+ const notes=s.slice(s.indexOf('function oalaNotes()'),s.indexOf('function oalaField('));
+ const markup=vm.runInNewContext(notes+';oalaNotes()',{});
+ assert.equal((markup.match(/<details>/g)||[]).length,4);assert.doesNotMatch(markup,/<details open|name=/);
+ for(const label of ['每月入息審查','資產審查','年金保費及年金收入','夫婦及申請資格'])assert.ok(markup.includes(label));
+ assert.match(markup,/https:\/\/www\.swd\.gov\.hk\/oala\//);
+ const page=s.slice(s.indexOf('function renderOala(){'),s.indexOf('function renderHiddenComparison'));
+ assert.ok(page.indexOf('${oalaNotes()}')<page.indexOf('社署財務限額'));assert.ok(page.indexOf('社署財務限額')<page.indexOf('目前財務狀況'));assert.ok(page.indexOf('目前財務狀況')<page.indexOf('id="oala-results"'));
+ assert.equal((page.match(/oalaNotes\(\)/g)||[]).length,1);
 });
