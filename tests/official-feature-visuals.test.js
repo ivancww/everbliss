@@ -23,8 +23,8 @@ test('each feature detail owns only its intended image assets',()=>{
 test('feature overview renders three cards even for saved F03 settings in User edit mode',async()=>{
  const vm=await import('node:vm');const s=fs.readFileSync('src/app/main.js','utf8');const fn=s.slice(s.indexOf('function renderFeatureCards('),s.indexOf('function renderFeatures('));
  for(const edit of [false,true]){const config={};for(const code of ['F01','F02','F03','F04']){config[`features.${code}.visible`]=true;config[`features.${code}.order`]=1;config[`features.${code}.title`]=code;config[`features.${code}.description`]=code;}
- const html=vm.runInNewContext(fn+';renderFeatureCards(config)',{config,userEdit:edit,userEditing:edit,previewMode:false,present:()=>config,presentationText:(_,v)=>v});assert.equal((html.match(/class="feature-card"/g)||[]).length,3);assert.doesNotMatch(html,/F03|feature-death/);assert.match(html,/F04/);}
- const config=await import('../src/data/presentation/user-config.js');assert.ok(!config.PRESENTATION_FIELDS.some(x=>x.path.startsWith('features.F03.')));
+ const html=vm.runInNewContext(fn+';renderFeatureCards(config)',{config,userEdit:edit,userEditing:edit,previewMode:false,present:()=>config,presentationText:(_,v)=>v});assert.equal((html.match(/class="feature-card"/g)||[]).length,3);assert.doesNotMatch(html,/F04|feature-death/);assert.match(html,/F03/);}
+ const config=await import('../src/data/presentation/user-config.js');assert.ok(!config.PRESENTATION_FIELDS.some(x=>x.path.startsWith('features.F04.')));
 });
 
 test('removed feature imagery and case details are absent from pages and cache',()=>{

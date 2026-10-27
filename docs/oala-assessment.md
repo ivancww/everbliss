@@ -9,3 +9,6 @@ AVA Platform's inspected launcher performs normal URL navigation with an avaEntr
 ## v0.4.2 presentation
 
 The four independent SWD topics remain collapsed by default. The official limits and allowance were rechecked against the SWD OALA page on 2026-10-27. A financial-limits pass can display a conditional illustration using the existing schedule payout plus one eligible person's allowance; it is not a prediction of approval. The couple assessment does not assume a second eligible recipient. Amount inputs are formatted during editing while the numeric values, or null for incomplete/invalid entries, are stored.
+
+## v0.4.5
+The OALA page uses a two-column information grid on desktop and one column on narrow screens, financial limits sourced from the same SWD data, side-by-side input groups and a conditional comparison. Existing assessment and product calculation formulas remain unchanged. Presentation schema version 2 safely migrates legacy F04 service overrides to F03 and discards old F03 death overrides; unrelated settings are retained. Device visual QA and image rights confirmation remain outstanding.
