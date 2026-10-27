@@ -29,7 +29,7 @@ test("interpolated income identifies its Official surrounding anchors and does n
   assert.equal(calculateEverBliss({issueAge:71,gender:"M",accumulation:"immediate",premiumUsd:25000}).available,false);
 });
 test("Government data carries current effective date and official source metadata",()=>{
-  assert.equal(oalaData.effectiveDate,"2026-02-01");assert.equal(oalaData.verifiedDate,"2026-10-26");
+  assert.equal(oalaData.effectiveDate,"2026-02-01");assert.equal(oalaData.verifiedDate,"2026-10-27");
   assert.ok(oalaData.sourceUrl.includes("swd.gov.hk"));assert.ok(oalaData.limitsSourceUrl.includes("swd.gov.hk"));assert.ok(oalaData.paymentSourceUrl.includes("swd.gov.hk"));
 });
 test("HK Annuity comparison is hidden by default and remains a separate optional page",()=>{
@@ -47,8 +47,8 @@ test("feature hub and Return to AVA remain part of the shell",()=>{
 });
 test("OALA page uses conditional rule framing and keeps asset and income results separate",()=>{
   const source=fs.readFileSync(path.join(root,"src/app/main.js"),"utf8");
-  assert.match(source,/只按社署現行公開的市場年金處理原則作初步估算/);assert.match(source,/最終由社會福利署按當時政策審批/);
-  assert.match(source,/資產審查/);assert.match(source,/入息審查/);assert.doesNotMatch(source,/政府已確認合資格/);
+  assert.match(source,/並非政府批核/);assert.match(source,/尚待社署確認/);
+  assert.match(source,/可評估資產/);assert.match(source,/可評估入息/);assert.doesNotMatch(source,/政府已確認合資格/);
 });
 test("RetireSmart is identified as non-contractual with verified provider and fee caveats",()=>{
   const source=fs.readFileSync(path.join(root,"src/app/main.js"),"utf8");

@@ -1,7 +1,7 @@
 export const oalaData = Object.freeze({
   ruleType: "Old Age Living Allowance (OALA) means test",
   effectiveDate: "2026-02-01",
-  verifiedDate: "2026-10-26",
+  verifiedDate: "2026-10-27",
   eligibilityAge: 65,
   single: Object.freeze({ incomeLimit: 10900, assetLimit: 415000 }),
   couple: Object.freeze({ incomeLimit: 16680, assetLimit: 630000 }),
