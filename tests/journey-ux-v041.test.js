@@ -55,3 +55,14 @@ test("new controls and summary keep the requested presentation boundaries",()=>{
   assert.doesNotMatch(result,/data-policy-year-slider/);assert.doesNotMatch(result,/第8年起包括非保證額外每月收入/);
   assert.doesNotMatch(summary,/data-action="restart"|class="disclosure"/);assert.match(summary,/data-action="home">完成/);
 });
+
+
+test("summary labels the year-8 combined income as a total including non-guaranteed income",()=>{
+  const source=fs.readFileSync("src/app/main.js","utf8");
+  const summary=source.slice(source.indexOf("function renderSummary()"),source.indexOf("function editToolbar()"));
+  const state={concern:"",desiredMonthlySpending:0,existingStableIncome:0,totalRetirementAssets:0,accumulation:"immediate"};
+  const ctx={state,present:()=>({}),getCalc:()=>({available:true,guaranteedMonthly:100,displayedMonthlyTotalYear8Plus:160}),currentReserveSummary:()=>({known:false}),retirementGap:()=>0,formatOutcomeAmount:value=>({amount:`HK$${value}`}),getDisplayFxRate:()=>1,icon:()=>"",presentationText:()=>"",html:String,hkd:String,n:Number};
+  const rendered=vm.runInNewContext(summary+";renderSummary()",ctx);
+  assert.match(rendered,/HK\$100；第8年起每月收入（包括非保證額外收入） HK\$160/);
+  assert.doesNotMatch(rendered,/第8年起可加入額外每月收入 HK\$160/);
+});
