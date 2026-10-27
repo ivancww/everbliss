@@ -25,11 +25,11 @@ function harness(buildId,cachesMap,posted,indexedDBRef,fetchImpl=globalThis.fetc
 }
 async function runLifecycle(h,kind){let promise;h.handlers[kind]({waitUntil:p=>{promise=p;}});await promise;}
 
-test("v0.4.2 shell loads and build stamps a unique deployment identifier",()=>{
-  return fs.readFile(path.join(root,"release.json"),"utf8").then(async raw=>{const release=JSON.parse(raw);assert.equal(release.version,"v0.4.2");
+test("v0.4.3 shell loads and build stamps a unique deployment identifier",()=>{
+  return fs.readFile(path.join(root,"release.json"),"utf8").then(async raw=>{const release=JSON.parse(raw);assert.equal(release.version,"v0.4.3");
   const built=execFileSync(process.execPath,[path.join(root,"scripts/build.js")],{cwd:root,env:{...process.env,GITHUB_SHA:"test-sha-001"},encoding:"utf8"});
-  assert.match(built,/Built EverBliss v0\.4\.2 \(test-sha-001\)/);
-  const [sw,meta,index,info]=await Promise.all([fs.readFile(path.join(root,"dist/sw.js"),"utf8"),fs.readFile(path.join(root,"dist/release.json"),"utf8"),fs.readFile(path.join(root,"dist/index.html"),"utf8"),fs.readFile(path.join(root,"dist/build-info.js"),"utf8")]);assert.match(sw,/const BUILD_ID = "test-sha-001"/);assert.equal(JSON.parse(meta).buildId,"test-sha-001");assert.match(index,/<small id="app-version">v0\.4\.2<\/small>/);assert.match(info,/"version":"v0\.4\.2"/);});
+  assert.match(built,/Built EverBliss v0\.4\.3 \(test-sha-001\)/);
+  const [sw,meta,index,info]=await Promise.all([fs.readFile(path.join(root,"dist/sw.js"),"utf8"),fs.readFile(path.join(root,"dist/release.json"),"utf8"),fs.readFile(path.join(root,"dist/index.html"),"utf8"),fs.readFile(path.join(root,"dist/build-info.js"),"utf8")]);assert.match(sw,/const BUILD_ID = "test-sha-001"/);assert.equal(JSON.parse(meta).buildId,"test-sha-001");assert.match(index,/<small id="app-version">v0\.4\.3<\/small>/);assert.match(info,/"version":"v0\.4\.3"/);});
 });
 
 test("next deployment changes the worker, stages new shell, activates it and safely retires prior shell",async()=>{

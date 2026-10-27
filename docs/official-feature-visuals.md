@@ -1,0 +1,7 @@
+# Official AIA feature visuals
+
+Source: owner-provided AIA 優悅年金保險計劃 product brochure (22 PDF pages) and 自主樂齡健康服務 leaflet (10 PDF pages). `monthly-income.webp` is cropped from PDF page 5; `case-illustration.webp` from PDF page 11; `advance-timeline.webp` from PDF page 8; `healthy-ageing.webp` and `service-structure.webp` from leaflet PDF pages 2 and 3. The leaflet uses two-page spreads. Artwork remains AIA material; attribution is shown alongside the images. Confirm AIA asset-reuse permission before public release. The separate sales training PDF states internal confidential and not for distribution, and no content or artwork from it is included.
+
+The brochure describes additional income as 50% of the guaranteed payment at the relevant time, after approval for a specified diagnosis and while alive, for up to 120 months. Non-guaranteed payments can vary or be zero. Advance payments are payments brought forward, subject to the anniversary and policy limits, not an additional benefit. The leaflet permits the insured to share the five basic Part 2 sessions with up to two eligible parents or spouse; eligible higher-tier customers can receive 20 additional sessions. The insurer and independent provider terms govern all service availability.
+
+The health calculation uses the existing product engine and the standard HKD display conversion; no product formulas or data changed. The customer brochure example is illustrative. Real-device layout and image legibility remain unverified. PR #9 is merged on main at v0.4.2; this integrated change targets v0.4.3.
