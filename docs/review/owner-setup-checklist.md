@@ -15,3 +15,5 @@ Canonical `GEMINI.md` lives in `ivancww/avaplatform`. This EverBliss PR vendors 
 3. Validate auth failure/oversize diff/fork handling.
 4. Review Codex worker design and credential scope before enabling auto-repair.
 5. Verify 3-cycle cap, re-audit on bot push, final notification and manual merge.
+
+API-key pilot: the owner has reported that `GEMINI_API_KEY` is configured. Validate availability only by a real Actions run; do not print or request the key. Until PR #7 is merged, the restricted PR #7 bootstrap reviews PR #8 at its pinned HEAD. Production-wide PR review remains contingent on owner approval of PR #7 and validation of the trusted-base workflow.

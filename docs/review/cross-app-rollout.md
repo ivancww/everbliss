@@ -1,0 +1,5 @@
+# Cross-app rollout requirements
+
+EverBliss PR #7 is a pilot. AVA Platform, Saving, Medical, Medical Reserve, Critical Illness, Retire and CRM are not enrolled by this PR. Each repository needs an independently reviewed workflow on its default branch, a pinned copy of the shared rules plus app-specific rules, a repository-scoped Gemini API key, read-only contents access and narrowly scoped PR comment permission. Forks and external contributions must not receive credentials. Each workflow must use trusted-base execution, never run reviewed code in its credential-bearing job, limit review input and identify the exact reviewed HEAD.
+
+Before rollout, validate the real API-key review, stale-HEAD rejection, input-size and official-data exclusions, no-tool behavior, duplicate suppression, and no unintended production deployment. Product calculations and Official data must be reviewed without indiscriminate data upload. A human must approve each repository's onboarding and every merge. No Codex auto-repair, independent worker, owner notification channel or three-cycle orchestration is supplied by this pilot.

@@ -8,7 +8,8 @@ Check:
 - Front/User/Admin boundaries, AVA admin ticket + nonce + opener proof, and fail-closed server verification.
 - Official Sheet/GAS → Last Known Good → bundled data, source provenance, local overrides isolation, and IndexedDB.
 - Guaranteed vs non-guaranteed annuity income timing, official vs interpolated rates, surrender/death calculations, HKD FX disclaimers, and OALA dated facts.
-- PWA release/service-worker cache updates and offline safety.
+- Customer-state preservation, historical-state migration, correct forward/back navigation and responsive mobile/iPad behavior.
+- PWA release/service-worker cache updates, offline safety and release/version governance.
 - Changed-code regressions, missing tests, and secrets or customer-data exposure.
 
 Respond with verdict PASS / NEEDS_FIX / BLOCKED, head SHA, findings by Critical/High/Medium/Low with file/line and evidence, tests run/not run, and remaining live-device QA. PASS never means merge authorization.
