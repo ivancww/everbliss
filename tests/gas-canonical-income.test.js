@@ -34,3 +34,8 @@ test('HKMC reference sheet has 52 rows with exact yearly payout percentages',()=
 test('unauthorized requests cannot access admin data or publish changes',()=>{
  const {ctx}=harness();ctx.CacheService={getScriptCache:()=>({get:()=>null})};assert.throws(()=>ctx.adminGetDataset_({session:'bad'}),/ADMIN_SESSION_REQUIRED/);assert.throws(()=>ctx.requireAdmin_({session:'bad'},'official-write'),/ADMIN_SESSION_REQUIRED/);
 });
+test('HKMC Sheet monthly examples agree with all 52 official reference table records',()=>{
+ const {ctx}=harness(),rates=ctx.getHKAnnuityRates_().rates;
+ const lines=fs.readFileSync(new URL('../docs/hk-annuity/HK_Annuity_Rates.csv',import.meta.url),'utf8').trim().split(/\r?\n/).slice(1);
+ assert.equal(lines.length,52);for(const line of lines){const [age,gender,premium,monthly]=line.split(',');const item=rates.find(r=>r.issueAge===Number(age)&&r.gender===gender);assert.ok(item);assert.equal(item.referencePremiumHkd,Number(premium));assert.equal(item.monthlyPaymentHkd,Number(monthly));}
+});
