@@ -1,6 +1,7 @@
 import { assessment, formatAssessmentInput, parseAssessmentAmount, allowanceIllustration, deleteAcrossSeparator } from "./oala-assessment.js";
 import { calculateOutcome, setOfficialCalculationDataset } from "../calculations/full-outcomes.js";
 import { oalaData } from "../data/government/oala.js";
+import { fetchHKAnnuityRates, selectHKAnnuityReference } from "../data/government/hk-annuity-rates.js";
 import { appDefaults, appCapabilities, fxConfig } from "../data/metadata/app-config.js";
 import { createInitialState, loadAppState, loadLastKnownGoodOfficial, loadLastKnownGoodProductConfig, loadUserOverrides, saveAppState, saveLastKnownGoodOfficial, saveLastKnownGoodProductConfig, saveUserOverrides, clearUserOverrides } from "../storage/state.js";
 import { adminExchangeFromConfiguredEndpoint, establishAdminSession, receiveAdminProof } from "../admin/admin-auth.js";
@@ -45,6 +46,7 @@ let runtimeHkdPerUsd = fxConfig.rate;
 let scenarioReady = false;
 let comparisonOpen = false;
 let comparisonTab = "income";
+let hkAnnuityRates = null;
 const scheduleAfterPaint=callback=>typeof requestAnimationFrame==="function"?requestAnimationFrame(()=>setTimeout(callback,0)):setTimeout(callback,0);
 
 let saveQueue = Promise.resolve();
@@ -94,8 +96,12 @@ function renderAnnuityComparison(outcome,row,year,fx){
   const cumulative=cumulativeScheduledIncome(outcome.schedule,year);
   const payout=row.annualDisplayedIncome/12;
   const value=comparisonTab==="surrender"?row.surrenderValue:row.deathBenefit;
+  const hkReference=selectHKAnnuityReference(hkAnnuityRates,{issueAge:state.issueAge,gender:state.gender,premiumHkd:state.premiumHkd});
+  const hkMonthly=hkReference?`HK${money(hkReference.monthlyPaymentHkd)}（參考示例）`:"暫無官方數據";
+  const hkRatio=hkReference?`${hkReference.annualPayoutPercent.toFixed(3)}%（年領取／保費）`:"暫無官方數據";
   const rows=comparisonTab==="income"?[["每月收入",format(payout)],["開始領取",state.accumulation==="immediate"?"即期":"5年後"],["累積已收",format(cumulative)]]:comparisonTab==="surrender"?[["退保金額",format(value)],["累積已收年金",format(cumulative)],["合計價值",format(value==null?null:value+cumulative)]]:[["身故賠償",format(value)],["此前累積已收","暫無官方數據"],["合計利益","暫無官方數據"]];
-  return `<details class="annuity-comparison" data-comparison ${comparisonOpen?"open":""}><summary><strong>香港年金 vs 優悅年金</strong><span>同一保費 · 每月收入 · 退保 · 身故賠償</span></summary><div class="comparison-products"><div><h3>香港年金計劃</h3><span>每月年金收入</span><strong>暫無官方數據</strong></div><div><h3>AIA 優悅年金</h3><span>每月收入＋額外收入</span><strong>${format(payout)}</strong></div></div><p>香港年金以整付保費為準；開始時間及投保資格可能不同。優悅年金額外收入並非保證，須符合適用條款。</p><div class="segmented" role="group" aria-label="比較類別">${[["income","每月收入"],["surrender","退保"],["death","身故賠償"]].map(([key,label])=>`<button type="button" class="segment ${comparisonTab===key?"active":""}" data-comparison-tab="${key}" aria-pressed="${comparisonTab===key}">${label}</button>`).join("")}</div><div class="comparison-table"><table><thead><tr><th>比較項目</th><th>香港年金</th><th>優悅年金</th></tr></thead><tbody>${rows.map(([label,aia])=>`<tr><th scope="row">${label}</th><td>暫無官方數據</td><td>${aia}</td></tr>`).join("")}</tbody></table></div></details>`;
+  const hkRows=comparisonTab==="income"?[hkMonthly,"參考示例；領取時間待核實",hkRatio]:["暫無官方數據","暫無官方數據","暫無官方數據"];
+  return `<details class="annuity-comparison" data-comparison ${comparisonOpen?"open":""}><summary><strong>香港年金 vs 優悅年金</strong><span>同一保費 · 每月收入 · 退保 · 身故賠償</span></summary><div class="comparison-products"><div><h3>香港年金計劃</h3><span>每月年金收入</span><strong>${hkMonthly}</strong></div><div><h3>AIA 優悅年金</h3><span>每月收入＋額外收入</span><strong>${format(payout)}</strong></div></div><p>香港年金以整付保費為準；開始時間及投保資格可能不同。優悅年金額外收入並非保證，須符合適用條款。</p><div class="segmented" role="group" aria-label="比較類別">${[["income","每月收入"],["surrender","退保"],["death","身故賠償"]].map(([key,label])=>`<button type="button" class="segment ${comparisonTab===key?"active":""}" data-comparison-tab="${key}" aria-pressed="${comparisonTab===key}">${label}</button>`).join("")}</div><div class="comparison-table"><table><thead><tr><th>比較項目</th><th>香港年金</th><th>優悅年金</th></tr></thead><tbody>${rows.map(([label,aia])=>`<tr><th scope="row">${label}</th><td>${hkRows[rows.findIndex(r=>r[0]===label)]||"暫無官方數據"}</td><td>${aia}</td></tr>`).join("")}</tbody></table></div></details>`;
 }
 
 function renderConcept(){const p=present();return journeyShell(cardStart("退休收入點樣安排",stepTitles.concept,presentationText("j04.explanation",p["j04.explanation"]))+`<div class="concept-grid"><div class="concept-box"><strong>${presentationText("j04.beforeLabel",p["j04.beforeLabel"])}</strong><span>收入 → 累積財富</span></div><div class="concept-arrow" aria-hidden="true">→</div><div class="concept-box accent"><strong>${presentationText("j04.afterLabel",p["j04.afterLabel"])}</strong><span>部分資產 → 每月現金流／長糧</span></div></div><div class="callout">${presentationText("j04.support",p["j04.support"])} 這不代表所有財務需要都獲保證，亦不代表本金不會減少。</div>${nextButton()}`);}
@@ -219,6 +225,7 @@ async function init(){
     render,
     schedule:scheduleAfterPaint,
     refreshCloud:()=>Promise.allSettled([
+      fetchHKAnnuityRates(endpoint).then(rates=>{hkAnnuityRates=rates;if(state.page==="result")render();}),
       resolveOfficialDataset({endpoint,loadLastKnownGood:loadLastKnownGoodOfficial,saveLastKnownGood:saveLastKnownGoodOfficial}).then(official=>{
         if(official.source==="VALID_CLOUD_OFFICIAL"){
           setOfficialCalculationDataset(official.dataset);
