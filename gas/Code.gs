@@ -108,11 +108,44 @@ function readDatasetMeta_() {
   const status=datasetStatus_(r[F.meta.status]);
   return {dataset_name:'everbliss-official',dataset_version:text_(r[F.meta.dataset_version]),schema_version:text_(r[F.meta.schema_version]),published_version:text_(r[F.meta.published_version]),status,source_sha:text_(r[F.meta.source_sha]),updated_at:date_(r[F.meta.updated_at]),published_at:date_(r[F.meta.published_at]),published_by:text_(r[F.meta.published_by])};
 }
+/**
+ * Public income calculation source: AIA guaranteed appendix plus
+ * proposal-backed totals and bracketed linear interpolation.
+ * Legacy 36-row Admin intake stays untouched until a separate migration.
+ */
+function readCanonicalIncomeRates_() {
+  const sheet = requireSheet_('AIA優悅年金_官方保證收入率');
+  const values = sheet.getDataRange().getValues();
+  const expected = ['投保年齡','性別','領取模式','保證每月收入（每US$1,000）','保證每年收入率（%）','預期總年收入率（%）','非保證年收入率（%）','數據類型'];
+  if (values.length !== 145 || expected.some((h,i)=>text_(values[0][i])!==h)) throw Error('AIA_CANONICAL_SCHEMA_INVALID');
+  const rates=[], seen=new Set();
+  values.slice(1).forEach((r,i)=>{
+    const age=Number(r[0]), gender=gender_(r[1]), mode=r[2]==='即時'?'immediate':mode_(r[2]);
+    const guaranteed=Number(r[4]), monthly=Number(r[3]), total=r[5]===''?NaN:Number(r[5]), ng=r[6]===''?NaN:Number(r[6]);
+    const key=age+'|'+gender+'|'+mode;
+    if (!Number.isInteger(age)||age<40||age>75||seen.has(key)||!Number.isFinite(guaranteed)||
+        Math.abs(guaranteed-monthly*1.2)>0.000001) throw Error('AIA_CANONICAL_ROW_INVALID:'+(i+2));
+    seen.add(key);
+    if(age<50) return; // no proposal brackets; existing app supports ages 50–75
+    if(!Number.isFinite(total)||!Number.isFinite(ng)||Math.abs(total-guaranteed-ng)>0.000001)
+      throw Error('AIA_CANONICAL_INCOME_INVALID:'+(i+2));
+    const source=text_(r[7]);
+    if(!['官方建議書','線性插值估算'].includes(source)) throw Error('AIA_CANONICAL_SOURCE_INVALID:'+(i+2));
+    rates.push({age,gender,mode,guaranteedRate:guaranteed/100,
+      nonGuaranteedRateFromYear8:ng/100,totalRateFromYear8:total/100,
+      sourceType:source==='官方建議書'?'OFFICIAL':'INTERPOLATED',
+      sourceAges:source==='官方建議書'?[age]:text_(r[8]).split('–').map(Number),
+      sourceFile:source==='官方建議書'?text_(r[9]):''});
+  });
+  if(rates.length!==104) throw Error('AIA_CANONICAL_INCOME_COUNT_INVALID:'+rates.length);
+  return rates;
+}
+
 function buildDataset_() {
   const income=readIncomeRates_(), surrender=readSurrender_(), death=readDeath_(), meta=readDatasetMeta_(), scenarios={};
   surrender.forEach(r=>{const k=scenarioKey_(r.issue_age,r.gender,r.mode); const s=scenarios[k]||(scenarios[k]={issueAge:r.issue_age,gender:r.gender,mode:r.mode,sourceType:'OFFICIAL_PARSED',sourceFile:r.source_file,years:{}}); const y=s.years[String(r.policy_year)]||(s.years[String(r.policy_year)]={attainedAge:r.attained_age}); y.surrenderMultiplier=r.surrender_multiplier; y.surrenderTotal=r.surrender_total_usd_25k;});
   death.forEach(r=>{const k=scenarioKey_(r.issue_age,r.gender,r.mode); const s=scenarios[k]||(scenarios[k]={issueAge:r.issue_age,gender:r.gender,mode:r.mode,sourceType:'OFFICIAL_PARSED',sourceFile:r.source_file,years:{}}); const y=s.years[String(r.policy_year)]||(s.years[String(r.policy_year)]={attainedAge:r.attained_age}); Object.assign(y,{deathMultiplier:r.death_multiplier,deathTotal:r.death_total_usd_25k,guaranteedDeathValue:r.guaranteed_death_value_usd_25k,terminalBonus:r.terminal_bonus_usd_25k});});
-  return {schemaVersion:EB.SCHEMA_VERSION,datasetName:'everbliss-official',datasetVersion:meta.dataset_version,status:'PUBLISHED',sourceSha:meta.source_sha,updatedAt:meta.updated_at,incomeRates:{schemaVersion:EB.API_VERSION,basePremiumUsd:EB.BASE_PREMIUM_USD,rates:income.map(r=>({age:r.issue_age,gender:r.gender,mode:r.mode,guaranteedRate:r.guaranteed_rate,nonGuaranteedRateFromYear8:r.ng_rate_from_year8,totalRateFromYear8:r.total_rate_from_year8,sourceType:'OFFICIAL',sourceFile:r.source_file}))},multipliers:{schemaVersion:EB.API_VERSION,basePremiumUsd:EB.BASE_PREMIUM_USD,scenarios}};
+  return {schemaVersion:EB.SCHEMA_VERSION,datasetName:'everbliss-official',datasetVersion:meta.dataset_version,status:'PUBLISHED',sourceSha:meta.source_sha,updatedAt:meta.updated_at,incomeRates:{schemaVersion:EB.API_VERSION,basePremiumUsd:EB.BASE_PREMIUM_USD,rates:readCanonicalIncomeRates_()},multipliers:{schemaVersion:EB.API_VERSION,basePremiumUsd:EB.BASE_PREMIUM_USD,scenarios}};
 }
 
 function validateDataset_() {
