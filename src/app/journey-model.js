@@ -25,7 +25,7 @@ export function oalaScenarioValues({ premiumHkd, outcome, policyYear, hkdPerUsd 
 export function migrateLiquidityState(saved) {
   if (!saved) return {};
   if (saved.liquidReserveMode === "months") {
-    const months = Number(saved.liquidReserveMonths);
+    const months = saved.liquidReserveMonths === null || saved.liquidReserveMonths === undefined || saved.liquidReserveMonths === "" ? NaN : Number(saved.liquidReserveMonths);
     return { ...saved, liquidReserveMode: "years", liquidReserveYears: Number.isFinite(months) && months >= 0 ? months / 12 : null, liquidReserveUnknown: false };
   }
   if (saved.liquidReserveMode === "unknown") return { ...saved, liquidReserveMode: "years", liquidReserveUnknown: true, liquidReserveYears: null };

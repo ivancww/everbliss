@@ -18,6 +18,8 @@ test("years, zero, unknown, amount and historical months retain correct reserve 
   assert.equal(old.liquidReserveYears,1.5);
   assert.equal(reserveSummary({...base,mode:old.liquidReserveMode,reserveYears:old.liquidReserveYears}).reserve,180000);
   assert.equal(migrateLiquidityState({liquidReserveMode:"unknown"}).liquidReserveUnknown,true);
+  const missing=migrateLiquidityState({liquidReserveMode:"months",liquidReserveMonths:null});
+  assert.equal(reserveSummary({...base,mode:missing.liquidReserveMode,reserveYears:missing.liquidReserveYears}).known,false);
 });
 
 test("cumulative cash flow uses each scheduled year, commencement and year 8 once", () => {
