@@ -54,7 +54,7 @@ export async function loadUserOverrides() {
 }
 
 export async function saveUserOverrides(overrides) {
-  const record = { ...overrides, metadata: { layer: "USER_OVERRIDE", schemaVersion: 1, updatedAt: new Date().toISOString() } };
+  const record = { ...overrides, metadata: { layer: "USER_OVERRIDE", schemaVersion: overrides.schemaVersion ?? 1, updatedAt: new Date().toISOString() } };
   try { await requestValue(OVERRIDE_STORE, "readwrite", "put", record); }
   catch { globalThis.localStorage?.setItem(localKey("overrides"), JSON.stringify(record)); }
   return record;

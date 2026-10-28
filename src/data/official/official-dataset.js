@@ -11,33 +11,12 @@ export const BUNDLED_OFFICIAL_FALLBACK = Object.freeze({
 });
 
 function expandIncomeRates(rows) {
-  if (!Array.isArray(rows) || rows.length < 8) return null;
-  const key = row => `${row.age}|${row.gender}|${row.mode}`;
-  const byKey = new Map();
-  for (const row of rows) {
-    if (!Number.isInteger(Number(row.age)) || Number(row.age) < 50 || Number(row.age) > 75 || !["M", "F"].includes(row.gender) || !["immediate", "deferred"].includes(row.mode)
-      || ![row.guaranteedRate, row.nonGuaranteedRateFromYear8, row.totalRateFromYear8].every(Number.isFinite) || byKey.has(key(row))) return null;
-    byKey.set(key(row), row);
-  }
-  const expanded = [];
-  for (const gender of ["M", "F"]) for (const mode of ["immediate", "deferred"]) {
-    const anchors = [...byKey.values()].filter(row => row.gender === gender && row.mode === mode && row.sourceType !== "INTERPOLATED").sort((a, b) => Number(a.age) - Number(b.age));
-    if (anchors.length < 2 || Number(anchors[0].age) > 50 || Number(anchors.at(-1).age) < 75) return null;
-    for (let age = 50; age <= 75; age++) {
-      const exact = byKey.get(`${age}|${gender}|${mode}`);
-      if (exact) { expanded.push(exact); continue; }
-      const lower = [...anchors].reverse().find(row => Number(row.age) < age);
-      const upper = anchors.find(row => Number(row.age) > age);
-      if (!lower || !upper) return null;
-      const ratio = (age - Number(lower.age)) / (Number(upper.age) - Number(lower.age));
-      expanded.push({ age, gender, mode, guaranteedRate: lower.guaranteedRate + ratio * (upper.guaranteedRate - lower.guaranteedRate), nonGuaranteedRateFromYear8: lower.nonGuaranteedRateFromYear8 + ratio * (upper.nonGuaranteedRateFromYear8 - lower.nonGuaranteedRateFromYear8), totalRateFromYear8: lower.totalRateFromYear8 + ratio * (upper.totalRateFromYear8 - lower.totalRateFromYear8), sourceType: "INTERPOLATED", sourceAges: [Number(lower.age), Number(upper.age)] });
-    }
-  }
-  return expanded;
+  // A partial sheet cannot supply exact guaranteed rates; never interpolate them.
+  return Array.isArray(rows) && rows.length === 104 ? rows : null;
 }
 
 export function normalizeOfficialDataset(data) {
-  if (!data?.incomeRates || !data.multipliers) return null;
+  if (data?.incomeRates?.datasetContract !== "canonical-sheet-v1" || !data.multipliers) return null;
   const rates = expandIncomeRates(data.incomeRates.rates);
   if (!rates) return null;
   return { ...data, incomeRates: { ...data.incomeRates, rates } };
@@ -52,7 +31,8 @@ export function validateOfficialDataset(input) {
   const incomeKeys = new Set();
   for (const row of incomes) {
     if (!Number.isInteger(row.age) || !["M", "F"].includes(row.gender) || !["immediate", "deferred"].includes(row.mode)
-      || ![row.guaranteedRate, row.nonGuaranteedRateFromYear8, row.totalRateFromYear8].every(Number.isFinite)) return false;
+      || ![row.guaranteedRate, row.nonGuaranteedRateFromYear8, row.totalRateFromYear8].every(Number.isFinite)
+      || row.guaranteedRate <= 0 || row.nonGuaranteedRateFromYear8 < 0 || Math.abs(row.guaranteedRate + row.nonGuaranteedRateFromYear8 - row.totalRateFromYear8) > 1e-8) return false;
     const key = `${row.age}|${row.gender}|${row.mode}`;
     if (incomeKeys.has(key)) return false;
     incomeKeys.add(key);

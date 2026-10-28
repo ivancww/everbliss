@@ -70,7 +70,8 @@ function publicAction_(action) {
     case 'getIncomeRates': ensurePublished_(); return {success:true,incomeRates:readIncomeRates_()};
     case 'getSurrenderMultipliers': ensurePublished_(); return {success:true,surrenderMultipliers:readSurrender_()};
     case 'getDeathMultipliers': ensurePublished_(); return {success:true,deathMultipliers:readDeath_()};
-    case 'getOfficialDataset': ensurePublished_(); return {success:true,dataset:buildDataset_()};
+    case 'getOfficialDataset': ensurePublished_(); validateDataset_(); return {success:true,dataset:buildDataset_()};
+    case 'getHKAnnuityRates': return getHKAnnuityRates_();
     default: throw Error('ACTION_NOT_ALLOWED');
   }
 }
@@ -89,7 +90,7 @@ function readProductConfig_() {
   return out;
 }
 function readIncomeRates_() {
-  return readTable_(EB.SHEETS.INCOME).map(r=>({record_id:text_(r[F.income.record_id]),issue_age:number_(r[F.income.issue_age]),gender:gender_(r[F.income.gender]),mode:mode_(r[F.income.mode]),guaranteed_rate:number_(r[F.income.guaranteed_rate]),ng_rate_from_year8:number_(r[F.income.ng_rate_from_year8]),total_rate_from_year8:number_(r[F.income.total_rate_from_year8]),source_type:'OFFICIAL',source_file:text_(r[F.income.source_file]),source_version:text_(r[F.income.source_version]),verified_date:date_(r[F.income.verified_date]),record_version:number_(r[F.income.record_version]),updated_at:date_(r[F.income.updated_at])}));
+  return readCanonicalIncomeRates_().map(r=>({record_id:'income-'+r.age+'-'+r.gender+'-'+r.mode,issue_age:r.age,gender:r.gender,mode:r.mode,guaranteed_rate:r.guaranteedRate,ng_rate_from_year8:r.nonGuaranteedRateFromYear8,total_rate_from_year8:r.totalRateFromYear8,source_type:r.sourceType,source_file:r.sourceFile,source_ages:r.sourceAges,source_version:'',verified_date:'',record_version:null,updated_at:''}));
 }
 function readSurrender_() {
   return readTable_(EB.SHEETS.SURRENDER).map(r=>({record_id:text_(r[F.surrender.record_id]),issue_age:number_(r[F.surrender.issue_age]),gender:gender_(r[F.surrender.gender]),mode:mode_(r[F.surrender.mode]),policy_year:number_(r[F.surrender.policy_year]),attained_age:number_(r[F.surrender.attained_age]),surrender_total_usd_25k:number_(r[F.surrender.surrender_total_usd_25k]),surrender_multiplier:number_(r[F.surrender.surrender_multiplier]),source_type:'OFFICIAL_PARSED',source_file:text_(r[F.surrender.source_file]),source_version:text_(r[F.surrender.source_version]),verified_date:date_(r[F.surrender.verified_date]),record_version:number_(r[F.surrender.record_version]),updated_at:date_(r[F.surrender.updated_at])}));
@@ -107,16 +108,56 @@ function readDatasetMeta_() {
   const status=datasetStatus_(r[F.meta.status]);
   return {dataset_name:'everbliss-official',dataset_version:text_(r[F.meta.dataset_version]),schema_version:text_(r[F.meta.schema_version]),published_version:text_(r[F.meta.published_version]),status,source_sha:text_(r[F.meta.source_sha]),updated_at:date_(r[F.meta.updated_at]),published_at:date_(r[F.meta.published_at]),published_by:text_(r[F.meta.published_by])};
 }
+/**
+ * Public income calculation source: AIA guaranteed appendix plus
+ * proposal-backed totals and bracketed linear interpolation.
+ * Legacy 36-row Admin intake stays untouched until a separate migration.
+ */
+function readCanonicalIncomeRates_() {
+  const sheet = requireSheet_('AIA優悅年金_官方保證收入率');
+  const values = sheet.getDataRange().getValues();
+  const expected = ['投保年齡','性別','領取模式','保證每月收入（每US$1,000）','保證每年收入率（%）','預期總年收入率（%）','非保證年收入率（%）','數據類型','參考年齡','來源／方法'];
+  if (values.length !== 145 || expected.some((h,i)=>text_(values[0][i])!==h)) throw Error('AIA_CANONICAL_SCHEMA_INVALID');
+  const rates=[], seen=new Set();
+  values.slice(1).forEach((r,i)=>{
+    const age=Number(r[0]), gender=gender_(r[1]), mode=r[2]==='即時'?'immediate':mode_(r[2]);
+    const guaranteed=r[4]===''?NaN:Number(r[4]), monthly=r[3]===''?NaN:Number(r[3]), total=r[5]===''?NaN:Number(r[5]), ng=r[6]===''?NaN:Number(r[6]);
+    const key=age+'|'+gender+'|'+mode;
+    if (!Number.isInteger(age)||age<40||age>75||seen.has(key)||!Number.isFinite(guaranteed)||guaranteed<=0||!Number.isFinite(monthly)||monthly<=0||
+        Math.abs(guaranteed-monthly*1.2)>0.000001) throw Error('AIA_CANONICAL_ROW_INVALID:'+(i+2));
+    seen.add(key);
+    if(age<50) return; // no proposal brackets; existing app supports ages 50–75
+    if(!Number.isFinite(total)||total<guaranteed||!Number.isFinite(ng)||ng<0||Math.abs(total-guaranteed-ng)>0.000001)
+      throw Error('AIA_CANONICAL_INCOME_INVALID:'+(i+2));
+    const source=text_(r[7]), sourceAges=source==='官方建議書'?[age]:text_(r[8]).split('–').map(Number);
+    if(!['官方建議書','線性插值估算'].includes(source) || !text_(r[9]) || (source==='官方建議書' && Number(r[8])!==age) || (source==='線性插值估算' && (sourceAges.length!==2 || !sourceAges.every(Number.isInteger) || sourceAges[0]>=age || sourceAges[1]<=age || sourceAges[0]<50 || sourceAges[1]>75))) throw Error('AIA_CANONICAL_SOURCE_INVALID:'+(i+2));
+    rates.push({age,gender,mode,guaranteedRate:guaranteed/100,
+      nonGuaranteedRateFromYear8:(total-guaranteed)/100,totalRateFromYear8:total/100,
+      sourceType:source==='官方建議書'?'OFFICIAL':'INTERPOLATED',
+      sourceAges,
+      sourceFile:source==='官方建議書'?text_(r[9]):''});
+  });
+  if(rates.length!==104) throw Error('AIA_CANONICAL_INCOME_COUNT_INVALID:'+rates.length);
+  const byKey=new Map(rates.map(r=>[r.age+'|'+r.gender+'|'+r.mode,r]));
+  rates.filter(r=>r.sourceType==='INTERPOLATED').forEach(r=>{
+    const [low,high]=r.sourceAges, a=byKey.get(low+'|'+r.gender+'|'+r.mode), b=byKey.get(high+'|'+r.gender+'|'+r.mode);
+    if(!a||!b||a.sourceType!=='OFFICIAL'||b.sourceType!=='OFFICIAL') throw Error('AIA_CANONICAL_ANCHOR_INVALID:'+r.age);
+    const expected=a.totalRateFromYear8+(b.totalRateFromYear8-a.totalRateFromYear8)*(r.age-low)/(high-low);
+    if(Math.abs(expected-r.totalRateFromYear8)>1e-8) throw Error('AIA_CANONICAL_INTERPOLATION_INVALID:'+r.age);
+  });
+  return rates;
+}
+
 function buildDataset_() {
-  const income=readIncomeRates_(), surrender=readSurrender_(), death=readDeath_(), meta=readDatasetMeta_(), scenarios={};
+  const surrender=readSurrender_(), death=readDeath_(), meta=readDatasetMeta_(), scenarios={};
   surrender.forEach(r=>{const k=scenarioKey_(r.issue_age,r.gender,r.mode); const s=scenarios[k]||(scenarios[k]={issueAge:r.issue_age,gender:r.gender,mode:r.mode,sourceType:'OFFICIAL_PARSED',sourceFile:r.source_file,years:{}}); const y=s.years[String(r.policy_year)]||(s.years[String(r.policy_year)]={attainedAge:r.attained_age}); y.surrenderMultiplier=r.surrender_multiplier; y.surrenderTotal=r.surrender_total_usd_25k;});
   death.forEach(r=>{const k=scenarioKey_(r.issue_age,r.gender,r.mode); const s=scenarios[k]||(scenarios[k]={issueAge:r.issue_age,gender:r.gender,mode:r.mode,sourceType:'OFFICIAL_PARSED',sourceFile:r.source_file,years:{}}); const y=s.years[String(r.policy_year)]||(s.years[String(r.policy_year)]={attainedAge:r.attained_age}); Object.assign(y,{deathMultiplier:r.death_multiplier,deathTotal:r.death_total_usd_25k,guaranteedDeathValue:r.guaranteed_death_value_usd_25k,terminalBonus:r.terminal_bonus_usd_25k});});
-  return {schemaVersion:EB.SCHEMA_VERSION,datasetName:'everbliss-official',datasetVersion:meta.dataset_version,status:'PUBLISHED',sourceSha:meta.source_sha,updatedAt:meta.updated_at,incomeRates:{schemaVersion:EB.API_VERSION,basePremiumUsd:EB.BASE_PREMIUM_USD,rates:income.map(r=>({age:r.issue_age,gender:r.gender,mode:r.mode,guaranteedRate:r.guaranteed_rate,nonGuaranteedRateFromYear8:r.ng_rate_from_year8,totalRateFromYear8:r.total_rate_from_year8,sourceType:'OFFICIAL',sourceFile:r.source_file}))},multipliers:{schemaVersion:EB.API_VERSION,basePremiumUsd:EB.BASE_PREMIUM_USD,scenarios}};
+  return {schemaVersion:EB.SCHEMA_VERSION,datasetName:'everbliss-official',datasetVersion:meta.dataset_version,status:'PUBLISHED',sourceSha:meta.source_sha,updatedAt:meta.updated_at,incomeRates:{schemaVersion:EB.API_VERSION,datasetContract:'canonical-sheet-v1',basePremiumUsd:EB.BASE_PREMIUM_USD,rates:readCanonicalIncomeRates_()},multipliers:{schemaVersion:EB.API_VERSION,basePremiumUsd:EB.BASE_PREMIUM_USD,scenarios}};
 }
 
 function validateDataset_() {
-  const incomes=readIncomeRates_(), surrender=readSurrender_(), death=readDeath_(), d=buildDataset_(), scenarios=d.multipliers.scenarios;
-  if(incomes.length!==36) throw Error('INCOME_ROW_COUNT_INVALID:'+incomes.length);
+  const surrender=readSurrender_(), death=readDeath_(), d=buildDataset_(), scenarios=d.multipliers.scenarios;
+  if(d.incomeRates.rates.length!==104) throw Error('CANONICAL_INCOME_COUNT_INVALID');
   if(surrender.length!==1396) throw Error('SURRENDER_ROW_COUNT_INVALID:'+surrender.length);
   if(death.length!==1396) throw Error('DEATH_ROW_COUNT_INVALID:'+death.length);
   if(Object.keys(scenarios).length!==36) throw Error('SCENARIO_COUNT_INVALID');
@@ -124,13 +165,13 @@ function validateDataset_() {
   surrender.forEach(r=>assertNear_(r.surrender_multiplier,r.surrender_total_usd_25k/EB.BASE_PREMIUM_USD,'SURRENDER_RECONCILIATION:'+r.record_id));
   death.forEach(r=>{if(Math.abs(r.death_total_usd_25k-r.guaranteed_death_value_usd_25k-r.terminal_bonus_usd_25k)>1) throw Error('DEATH_COMPONENT_RECONCILIATION:'+r.record_id); assertNear_(r.death_multiplier,r.death_total_usd_25k/EB.BASE_PREMIUM_USD,'DEATH_RECONCILIATION:'+r.record_id);});
   verifyRegression_(scenarios);
-  return {success:true,incomeCount:incomes.length,surrenderCount:surrender.length,deathCount:death.length,scenarioCount:Object.keys(scenarios).length};
+  return {success:true,incomeCount:d.incomeRates.rates.length,surrenderCount:surrender.length,deathCount:death.length,scenarioCount:Object.keys(scenarios).length};
 }
 function verifyRegression_(s) {
   const a=s['60M_immediate'].years['10'], b=s['60M_deferred'].years['10'], c=s['75M_immediate'].years['10'];
   [['60M immediate surrender',a.surrenderTotal,14210],['60M immediate surrender multiplier',a.surrenderMultiplier,.56840],['60M immediate guaranteed death',a.guaranteedDeathValue,15750],['60M immediate bonus',a.terminalBonus,4475],['60M immediate death',a.deathTotal,20225],['60M immediate death multiplier',a.deathMultiplier,.809],['60M deferred surrender',b.surrenderTotal,18002],['60M deferred surrender multiplier',b.surrenderMultiplier,.72008],['60M deferred death',b.deathTotal,25070],['60M deferred death multiplier',b.deathMultiplier,1.0028],['75M immediate death',c.deathTotal,15900],['75M immediate death multiplier',c.deathMultiplier,.636]].forEach(x=>assertNear_(x[1],x[2],x[0]));
 }
-function ensurePublished_(){if(readDatasetMeta_().status!=='PUBLISHED') throw Error('OFFICIAL_DATASET_NOT_PUBLISHED');}
+function ensurePublished_(){const m=readDatasetMeta_();if(m.status!=='PUBLISHED'||!m.dataset_version||m.published_version!==m.dataset_version)throw Error('OFFICIAL_DATASET_NOT_PUBLISHED');if(!m.source_sha||m.source_sha!==computeSha_())throw Error('OFFICIAL_DATASET_FINGERPRINT_MISMATCH');}
 
 // Browser-bound AVA proof is exchanged server-to-server with the current Platform contract.
 // The browser receives only an opaque App session ID; the signed Platform proof stays in Script Cache.
@@ -166,7 +207,7 @@ function requireAdmin_(body,operation) {
   verifyPlatformAdminSession_(s.adminSessionProof,operation,s.expiresAt);
   return {sessionId:id,appId:s.appId,expiresAt:s.expiresAt,subject:'AVA Admin'};
 }
-function adminGetDataset_(body) { const s=requireAdmin_(body,'official-read');return{success:true,appId:EB.APP_ID,adminAuthorized:true,contract:EB.ADMIN_CONTRACT,sessionExpiresAt:s.expiresAt,dataset:{productConfig:readProductConfig_(),incomeRates:readIncomeRates_(),surrenderMultipliers:readSurrender_(),deathMultipliers:readDeath_(),officialSources:readSources_(),datasetMeta:readDatasetMeta_(),auditLog:readAuditLog_()}}; }
+function adminGetDataset_(body) { const s=requireAdmin_(body,'official-read');return{success:true,appId:EB.APP_ID,adminAuthorized:true,contract:EB.ADMIN_CONTRACT,sessionExpiresAt:s.expiresAt,dataset:{productConfig:readProductConfig_(),incomeRates:readIncomeRates_(),canonicalIncomeRates:readCanonicalIncomeRates_(),surrenderMultipliers:readSurrender_(),deathMultipliers:readDeath_(),officialSources:readSources_(),datasetMeta:readDatasetMeta_(),auditLog:readAuditLog_()}}; }
 function readAuditLog_() { const sh=requireSheet_(EB.SHEETS.AUDIT), rows=sh.getDataRange().getValues().slice(1).filter(r=>r.some(v=>v!==''&&v!==null)).slice(-200); return rows.map(r=>({timestamp:text_(r[0]),admin_session_id:text_(r[1]),operation:text_(r[2]),domain:text_(r[3]),record_id:text_(r[4]),old_value:text_(r[5]),new_value:text_(r[6]),dataset_version_before:text_(r[7]),dataset_version_after:text_(r[8]),source_sha:text_(r[9])})); }
 function adminPublish_(body) { return withLock_(()=>{const s=requireAdmin_(body,'official-write');return publish_(body,s);}); }
 function publish_(body,session) {
@@ -186,7 +227,7 @@ function publish_(body,session) {
 }
 function validateChanges_(changes) {
   const allow={product:['value'],income:['guaranteed_rate','ng_rate_from_year8','total_rate_from_year8'],surrender:['surrender_total_usd_25k','surrender_multiplier'],death:['guaranteed_death_value_usd_25k','terminal_bonus_usd_25k','death_total_usd_25k','death_multiplier'],sources:['status','notes']};
-  changes.forEach(c=>{if(!allow[c.domain]||!c.recordId||!allow[c.domain].includes(c.field)) throw Error('FIELD_NOT_ALLOWED'); if(['income','surrender','death'].includes(c.domain)){if(!c.sourceFile) throw Error('OFFICIAL_SOURCE_REQUIRED'); verifySource_(c.sourceFile);} const n=Number(c.newValue); if(!Number.isFinite(n)&&c.domain!=='sources') throw Error('OFFICIAL_VALUE_INVALID'); if((c.domain==='surrender'||c.domain==='death')&&n<0) throw Error('OFFICIAL_VALUE_INVALID'); if(c.domain==='income'&&(n<0||n>1)) throw Error('INCOME_RATE_INVALID');});
+  changes.forEach(c=>{if(c.domain==='income') throw Error('INCOME_CANONICAL_SHEET_EDIT_REQUIRED'); if(!allow[c.domain]||!c.recordId||!allow[c.domain].includes(c.field)) throw Error('FIELD_NOT_ALLOWED'); if(['income','surrender','death'].includes(c.domain)){if(!c.sourceFile) throw Error('OFFICIAL_SOURCE_REQUIRED'); verifySource_(c.sourceFile);} const n=Number(c.newValue); if(!Number.isFinite(n)&&c.domain!=='sources') throw Error('OFFICIAL_VALUE_INVALID'); if((c.domain==='surrender'||c.domain==='death')&&n<0) throw Error('OFFICIAL_VALUE_INVALID'); if(c.domain==='income'&&(n<0||n>1)) throw Error('INCOME_RATE_INVALID');});
 }
 function verifySource_(filename) { const s=readSources_().find(x=>x.filename===filename); if(!s) throw Error('OFFICIAL_SOURCE_NOT_FOUND'); const v=String(s.status||''); if(!(v.indexOf('已核實')===0||v.toUpperCase().indexOf('VERIFIED')===0)) throw Error('OFFICIAL_SOURCE_NOT_VERIFIED'); if(!String(s.table_type).includes('支取每月入息')) throw Error('OFFICIAL_SOURCE_SCENARIO_INVALID'); }
 function prepareChange_(c) {
@@ -217,7 +258,7 @@ function auditValue_(v) { return v===null||v===undefined?'':String(v); }
 function appendAudit_(entries,before,after,sha,session,snapshot) { if(!entries.length)return; const now=new Date().toISOString(), hidden=requireSheet_(EB.SHEETS.AUDIT), visible=spreadsheet_().getSheetByName(EB.SHEETS.VISIBLE_AUDIT), hiddenRows=[], visibleRows=[]; entries.forEach(e=>{const c=e.change,b=e.backup,old=auditValue_(b.old),value=auditValue_(c.newValue); hiddenRows.push([now,session.sessionId,'publish:'+c.field,c.domain,c.recordId,old,value,before,after,sha]); if(visible)visibleRows.push([now,session.subject||session.sessionId,c.domain,c.recordId+' / '+c.field,old,value]);}); const hiddenStart=snapshot.hidden.lastRow+1; hidden.getRange(hiddenStart,1,hiddenRows.length,hiddenRows[0].length).setValues(hiddenRows); if(visible&&visibleRows.length){const visibleStart=snapshot.visible.lastRow+1; visible.getRange(visibleStart,1,visibleRows.length,visibleRows[0].length).setValues(visibleRows);} }
 function updateMeta_(updates) { const sh=requireSheet_(EB.SHEETS.DATASET_META), vals=sh.getDataRange().getValues(), headers=vals[0].map(text_); Object.keys(updates).forEach(k=>{const c=headers.indexOf(F.meta[k]); if(c>=0){const v=k==='status'&&updates[k]==='PUBLISHED'?'已發布':updates[k]; sh.getRange(2,c+1).setValue(v);}}); syncVisibleMeta_(updates); }
 function syncVisibleMeta_(updates) { const sh=spreadsheet_().getSheetByName(EB.SHEETS.VISIBLE_DATASET_META); if(!sh)return; const v=sh.getDataRange().getValues(); if(v.length<2)return; const h=v[0].map(text_), m={dataset_version:'版本',status:'狀態',updated_at:'更新日期'}; Object.keys(m).forEach(k=>{if(Object.hasOwn(updates,k)){const c=h.indexOf(m[k]);if(c>=0)sh.getRange(2,c+1).setValue(k==='status'?'已發布':updates[k]);}}); }
-function computeSha_() { return sha256_(JSON.stringify({config:readProductConfig_(),income:readIncomeRates_(),surrender:readSurrender_(),death:readDeath_(),sources:readSources_()})); }
+function computeSha_() { return sha256_(JSON.stringify({config:readProductConfig_(),income:readCanonicalIncomeRates_(),surrender:readSurrender_(),death:readDeath_(),sources:readSources_()})); }
 function sha256_(s) { return Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,s).map(b=>('0'+(((b+256)%256).toString(16))).slice(-2)).join(''); }
 function incrementVersion_(v) { const s=String(v||''), a=s.match(/^(.*\bv)(\d+)$/); if(a)return a[1]+(Number(a[2])+1); const b=s.match(/^(\d+)\.(\d+)\.(\d+)$/); if(b)return `${b[1]}.${b[2]}.${Number(b[3])+1}`; throw Error('DATASET_VERSION_INVALID'); }
 
@@ -229,7 +270,7 @@ function spreadsheet_(){const id=PropertiesService.getScriptProperties().getProp
 function requireSheet_(n){const s=spreadsheet_().getSheetByName(n);if(!s)throw Error('SHEET_NOT_FOUND:'+n);return s;}
 function withLock_(fn){const l=LockService.getScriptLock();if(!l.tryLock(10000))throw Error('WRITE_LOCK_BUSY');try{return fn();}finally{l.releaseLock();}}
 function gender_(x){const v=text_(x);if(v==='男'||v==='M')return'M';if(v==='女'||v==='F')return'F';throw Error('INVALID_GENDER:'+v);}
-function mode_(x){const v=text_(x);if(v==='即期'||v==='immediate')return'immediate';if(v==='延期'||v==='5年延期'||v==='deferred')return'deferred';throw Error('INVALID_MODE:'+v);}
+function mode_(x){const v=text_(x);if(v==='即期'||v==='immediate')return'immediate';if(v==='延期'||v==='5年延期'||v==='5年遞延'||v==='deferred')return'deferred';throw Error('INVALID_MODE:'+v);}
 function datasetStatus_(x){const v=text_(x);if(v==='已準備'||v==='PREPARED')return'PREPARED';if(v==='已發布'||v==='PUBLISHED')return'PUBLISHED';return v||'PREPARED';}
 function scenarioKey_(a,g,m){return String(a)+g+'_'+m;}
 function number_(x){if(typeof x==='number'&&Number.isFinite(x))return x;const n=Number(String(x||'').replace(/,/g,'').replace(/\$/g,'').replace(/%/g,'').trim());if(!Number.isFinite(n))throw Error('INVALID_NUMBER:'+x);return n;}
@@ -239,3 +280,57 @@ function date_(x){if(!x)return'';if(Object.prototype.toString.call(x)==='[object
 function assertNear_(a,b,label){if(!Number.isFinite(a)||Math.abs(a-b)>1e-9)throw Error('REGRESSION_FAILED:'+label+':'+a+'!='+b);}
 function safeError_(e){return String(e&&e.message||'INTERNAL_ERROR').slice(0,240);}
 function json_(v){return ContentService.createTextOutput(JSON.stringify(v)).setMimeType(ContentService.MimeType.JSON);}
+
+/**
+ * Hong Kong Annuity — reference-only monthly payout and annual payout percentage.
+ * Read-only: the EXISTING AVA - EverBliss Google Sheet, no additional tabs.
+ * Not a current quotation or investment yield.
+ */
+function getHKAnnuityRates_() {
+  const sheet = spreadsheet_().getSheetByName('香港年金_領取金額及百分比');
+  if (!sheet) throw Error('HK_ANNUITY_SHEET_NOT_FOUND');
+  const values = sheet.getDataRange().getValues();
+  const headers = ['投保年齡', '性別', '每月領取金額（每HK$1,000,000）', '每年領取百分比（%）'];
+  if (values.length !== 53 || values[0].length !== 4 ||
+      headers.some((header, i) => String(values[0][i]).trim() !== header)) {
+    throw Error('HK_ANNUITY_SCHEMA_INVALID');
+  }
+  const seen = new Set();
+  const rates = values.slice(1).map((r, i) => {
+    const issueAge = Number(r[0]);
+    const gender = r[1] === '男' ? 'M' : r[1] === '女' ? 'F' : '';
+    const monthlyPaymentHkd = Number(r[2]);
+    const annualPayoutPercent = Number(r[3]);
+    const key = issueAge + '-' + gender;
+    if (!Number.isInteger(issueAge) || issueAge < 60 || issueAge > 85 ||
+        !gender || !Number.isFinite(monthlyPaymentHkd) || monthlyPaymentHkd <= 0 ||
+        !Number.isFinite(annualPayoutPercent) || annualPayoutPercent <= 0 ||
+        seen.has(key)) throw Error('HK_ANNUITY_INVALID_ROW:' + (i + 2));
+    if (Math.abs(annualPayoutPercent - monthlyPaymentHkd * 12 / 10000) > 0.0001) {
+      throw Error('HK_ANNUITY_PERCENT_MISMATCH:' + key);
+    }
+    seen.add(key);
+    return {issueAge, gender, referencePremiumHkd:1000000,
+      monthlyPaymentHkd, annualPayoutPercent};
+  });
+  for (let age = 60; age <= 85; age++) {
+    for (const gender of ['M', 'F']) {
+      if (!seen.has(age + '-' + gender)) throw Error('HK_ANNUITY_MISSING_ROW');
+    }
+  }
+  return {success:true, schemaVersion:1, product:'HK_ANNUITY',
+    status:'REFERENCE_ONLY_NOT_CURRENT_VERIFIED',
+    rateBasis:'HKD_1000000_SINGLE_PREMIUM',
+    percentageMeaning:'ANNUAL_PAYOUT_TO_PREMIUM',
+    count:rates.length, rates};
+}
+
+function testHKAnnuityRates() {
+  const result = getHKAnnuityRates_();
+  const male60 = result.rates.find(r => r.issueAge === 60 && r.gender === 'M');
+  const female60 = result.rates.find(r => r.issueAge === 60 && r.gender === 'F');
+  if (result.count !== 52 || male60?.monthlyPaymentHkd !== 5100 ||
+      female60?.monthlyPaymentHkd !== 4700) throw Error('HK_ANNUITY_SMOKE_TEST_FAILED');
+  Logger.log(JSON.stringify({success:true,count:result.count,male60,female60}));
+  return result;
+}
