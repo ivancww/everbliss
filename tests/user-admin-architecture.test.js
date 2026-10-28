@@ -75,7 +75,7 @@ test("Front resolves presentation only and keeps Official calculator layer indep
   assert.doesNotMatch(main, /renderUserEditor/);
   assert.match(main, /root\.innerHTML=\(pages\[state\.page\]/);
   assert.match(main, /root\.dataset\.page=state\.page/);
-  assert.match(main, /userEdit\?\{schema:"everbliss-user-config-v1",schemaVersion:2,values:pendingUserValues\}:overrides/);
+  assert.match(main, /userEdit\?\{schema:"everbliss-user-config-v1",schemaVersion:3,values:pendingUserValues\}:overrides/);
   assert.match(main, /\)\+editToolbar\(\)/);
   assert.match(main, /\["hkComparison","admin","adminBlocked","userEditor"\]\.includes\(state\.page\)/);
   assert.match(main, /userEditing=false;previewMode=false;render\(\)/);
