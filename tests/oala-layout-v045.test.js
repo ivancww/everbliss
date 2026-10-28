@@ -3,11 +3,11 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {normalizeUserPresentationConfig,resolveUserPresentation} from '../src/data/presentation/user-config.js';
 
-test('legacy F04 service settings migrate, legacy death F03 never contaminates',()=>{
- const legacy={schema:'everbliss-user-config-v1',schemaVersion:1,values:{'features.F03.title':'death','features.F03.visible':false,'features.F04.title':'service custom','features.F04.visible':true,'home.heroTitle':'other'}};
- const n=normalizeUserPresentationConfig(legacy);assert.equal(n.schemaVersion,2);assert.equal(n.values['features.F03.title'],'service custom');assert.equal(n.values['features.F03.visible'],true);assert.equal(n.values['home.heroTitle'],'other');assert.ok(!('features.F04.title' in n.values));
- const oldOnly=resolveUserPresentation({schema:'everbliss-user-config-v1',schemaVersion:1,values:{'features.F03.title':'death'}});assert.equal(oldOnly['features.F03.title'],'增值服務');
- const fresh=normalizeUserPresentationConfig({schema:'everbliss-user-config-v1',schemaVersion:2,values:{'features.F03.title':'new service'}});assert.equal(fresh.values['features.F03.title'],'new service');assert.deepEqual(normalizeUserPresentationConfig(fresh),fresh);
+test('legacy feature settings migrate by semantic identity',()=>{
+ const legacy={schema:'everbliss-user-config-v1',schemaVersion:1,values:{'features.F03.title':'death','features.F04.title':'service custom','features.F04.visible':true,'home.heroTitle':'other'}};
+ const n=normalizeUserPresentationConfig(legacy);assert.equal(n.schemaVersion,3);assert.equal(n.values['features.F04.title'],'service custom');assert.equal(n.values['home.heroTitle'],'other');assert.ok(!('features.F03.title' in n.values));
+ const old=normalizeUserPresentationConfig({schema:'everbliss-user-config-v1',schemaVersion:2,values:{'features.F03.title':'增值服務','features.F03.visible':false,'features.F02.title':'靈活／照顧安排','features.F02.visible':false}});assert.equal(resolveUserPresentation(old)['features.F04.title'],'樂齡健康服務');assert.equal(old.values['features.F04.visible'],false);assert.equal(old.values['features.F03.visible'],false);assert.equal(resolveUserPresentation(old)['features.F02.title'],'指定收款人');
+ const fresh=normalizeUserPresentationConfig({schema:'everbliss-user-config-v1',schemaVersion:3,values:{'features.F03.title':'advance custom'}});assert.equal(fresh.values['features.F03.title'],'advance custom');assert.deepEqual(normalizeUserPresentationConfig(fresh),fresh);
 });
 test('OALA desktop and mobile layout and rendering maintain dynamic boundaries',()=>{
  const s=fs.readFileSync('src/app/main.js','utf8'),css=fs.readFileSync('src/ui/styles.css','utf8');

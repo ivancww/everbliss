@@ -59,6 +59,10 @@ export const PRESENTATION_FIELDS = Object.freeze([
   { section: "FEATURES", path: "features.F03.description", label: "F03 說明" },
   { section: "FEATURES", path: "features.F03.visible", label: "顯示 F03", type: "boolean" },
   { section: "FEATURES", path: "features.F03.order", label: "F03 順序", type: "number" },
+  { section: "FEATURES", path: "features.F04.title", label: "F04 標題" },
+  { section: "FEATURES", path: "features.F04.description", label: "F04 說明" },
+  { section: "FEATURES", path: "features.F04.visible", label: "F04 顯示", type: "boolean" },
+  { section: "FEATURES", path: "features.F04.order", label: "F04 順序", type: "number" },
   { section: "OALA", path: "oala.explanation", label: "OALA 說明" },
   { section: "OALA", path: "oala.sectionLabel", label: "OALA 區域標籤" },
   { section: "OALA", path: "oala.homeCardVisible", label: "首頁顯示 OALA 卡片", type: "boolean" }
@@ -94,22 +98,26 @@ export const DEFAULT_USER_PRESENTATION = Object.freeze({
   "j08.assetsLabel": "退休資產總額", "j08.availableLabel": "可考慮長期收入安排", "j08.timingLabel": "選擇開始時間", "j08.cashflowLabel": "每月現金流",
   "features.title": "計劃特點", "features.description": "按你想了解的部分逐一查看；功能適用條件以產品條款為準。",
   "features.F01.title": "健康額外收入", "features.F01.description": "了解指定健康情況下的額外每月收入。", "features.F01.visible": true, "features.F01.order": 1,
-  "features.F02.title": "靈活／照顧安排", "features.F02.description": "了解收款安排與預支收入選項。", "features.F02.visible": true, "features.F02.order": 2,
-  "features.F03.title": "增值服務", "features.F03.description": "查看非合約式的 RetireSmart Health Service 資訊。", "features.F03.visible": true, "features.F03.order": 3,
+  "features.F02.title": "指定收款人", "features.F02.description": "了解每月入息指定收款安排。", "features.F02.visible": true, "features.F02.order": 2,
+  "features.F03.title": "預支收入", "features.F03.description": "了解預支原定入息的條件。", "features.F03.visible": true, "features.F03.order": 3,
+  "features.F04.title": "樂齡健康服務", "features.F04.description": "查看非合約式的 RetireSmart Health Service 資訊。", "features.F04.visible": true, "features.F04.order": 4,
   "oala.explanation": "了解年金安排在長者生活津貼資產及入息審查下的處理方式。",
   "oala.sectionLabel": "年金安排前後初步試算", "oala.homeCardVisible": true
 });
 
 const allowed = new Map(PRESENTATION_FIELDS.map(field => [field.path, field]));
 export function normalizeUserPresentationConfig(input) {
-  if (input?.schema === USER_CONFIG_SCHEMA && input.schemaVersion !== undefined && ![1, 2].includes(input.schemaVersion)) return { schema: USER_CONFIG_SCHEMA, schemaVersion: 2, layer: "USER_OVERRIDE", values: {} };
+  if (input?.schema === USER_CONFIG_SCHEMA && input.schemaVersion !== undefined && ![1, 2, 3].includes(input.schemaVersion)) return { schema: USER_CONFIG_SCHEMA, schemaVersion: 3, layer: "USER_OVERRIDE", values: {} };
   const raw = input?.schema === USER_CONFIG_SCHEMA ? input.values : input?.values || input;
-  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return { schema: USER_CONFIG_SCHEMA, schemaVersion: 2, layer: "USER_OVERRIDE", values: {} };
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return { schema: USER_CONFIG_SCHEMA, schemaVersion: 3, layer: "USER_OVERRIDE", values: {} };
   const values = {};
-  const legacy = input?.schemaVersion !== 2;
+  const oldVersion = input?.schemaVersion === 3 ? 3 : input?.schemaVersion === 2 ? 2 : 1;
   for (const [originalKey, value] of Object.entries(raw)) {
-    if (legacy && originalKey.startsWith("features.F03.")) continue;
-    const key = legacy && originalKey.startsWith("features.F04.") ? originalKey.replace("features.F04.", "features.F03.") : originalKey;
+    if (oldVersion === 1 && originalKey.startsWith("features.F03.")) continue;
+    if (oldVersion < 3 && ["features.F02.title","features.F02.description"].includes(originalKey)) continue;
+    const key = oldVersion === 2 && originalKey.startsWith("features.F03.") ? originalKey.replace("features.F03.", "features.F04.") : originalKey;
+    if (oldVersion < 3 && key === "features.F04.title" && value === "增值服務") continue;
+    if (oldVersion < 3 && key === "features.F04.order") { values[key] = 4; continue; }
     const field = allowed.get(key);
     if (!field) continue;
     if (field.type === "boolean" && typeof value === "boolean") values[key] = value;
@@ -117,9 +125,10 @@ export function normalizeUserPresentationConfig(input) {
     else if (field.type === "list" && Array.isArray(value)) values[key] = value.filter(item => typeof item === "string").slice(0, 20);
     else if (!field.type && typeof value === "string") values[key] = value.slice(0, 500);
   }
+  if (oldVersion < 3 && typeof raw["features.F02.visible"] === "boolean") values["features.F03.visible"] = raw["features.F02.visible"];
   if (!values["home.heroTitle"] && typeof input?.heroTitle === "string") values["home.heroTitle"] = input.heroTitle.slice(0, 500);
   if (!values["home.heroSupport"] && typeof input?.heroSupport === "string") values["home.heroSupport"] = input.heroSupport.slice(0, 500);
-  return { schema: USER_CONFIG_SCHEMA, schemaVersion: 2, layer: "USER_OVERRIDE", values };
+  return { schema: USER_CONFIG_SCHEMA, schemaVersion: 3, layer: "USER_OVERRIDE", values };
 }
 
 export function resolveUserPresentation(input) {
