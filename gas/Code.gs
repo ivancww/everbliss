@@ -289,7 +289,7 @@ function json_(v){return ContentService.createTextOutput(JSON.stringify(v)).setM
 function getHKAnnuityRates_() {
   const sheet = spreadsheet_().getSheetByName('香港年金_領取金額及百分比');
   if (!sheet) throw Error('HK_ANNUITY_SHEET_NOT_FOUND');
-  const values = sheet.getDataRange().getValues();
+  const values = sheet.getDataRange().getValues().filter((r,i)=>i===0 || r.slice(0,4).some(v=>v!==''&&v!==null)).map(r=>r.slice(0,4));
   const headers = ['投保年齡', '性別', '每月領取金額（每HK$1,000,000）', '每年領取百分比（%）'];
   if (values.length !== 53 || values[0].length !== 4 ||
       headers.some((header, i) => String(values[0][i]).trim() !== header)) {

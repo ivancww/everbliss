@@ -41,3 +41,15 @@ export function selectHKAnnuityReference(rates, {issueAge, gender, premiumHkd}) 
   if (!Array.isArray(rates) || Number(premiumHkd) !== 1000000) return null;
   return rates.find(r => r.issueAge === Number(issueAge) && r.gender === gender) || null;
 }
+
+export function isHKComparisonEligible(issueAge) {
+  const age=Number(issueAge);return Number.isInteger(age)&&age>=60&&age<=75; // AIA EverBliss issue-age ceiling; HKMC rate data still covers 60–85.
+}
+export function compareHKAnnuity(rates,{issueAge,gender,premiumHkd,policyYear}){
+  const age=Number(issueAge), premium=Number(premiumHkd), year=Number(policyYear);
+  if(!isHKComparisonEligible(age))return {status:'INELIGIBLE'};
+  if(!Number.isFinite(premium)||premium<500000||premium>5000000||!Number.isInteger(year)||year<1||age+year>100)return {status:'UNAVAILABLE'};
+  const rate=rates?.find(r=>r.issueAge===age&&r.gender===gender);if(!rate)return {status:'UNAVAILABLE'};
+  const monthly=rate.monthlyPaymentHkd*premium/1000000, cumulative=monthly*12*year;
+  return {status:'MODEL',monthly,annual:monthly*12,cumulative,death:Math.max(0,premium-cumulative)};
+}
