@@ -43,7 +43,7 @@ export function selectHKAnnuityReference(rates, {issueAge, gender, premiumHkd}) 
 }
 
 export function isHKComparisonEligible(issueAge) {
-  const age=Number(issueAge);return Number.isInteger(age)&&age>=60&&age<=85;
+  const age=Number(issueAge);return Number.isInteger(age)&&age>=60&&age<=75; // AIA EverBliss issue-age ceiling; HKMC rate data still covers 60–85.
 }
 export function compareHKAnnuity(rates,{issueAge,gender,premiumHkd,policyYear}){
   const age=Number(issueAge), premium=Number(premiumHkd), year=Number(policyYear);
