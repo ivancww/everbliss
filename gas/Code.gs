@@ -72,6 +72,7 @@ function publicAction_(action) {
     case 'getDeathMultipliers': ensurePublished_(); return {success:true,deathMultipliers:readDeath_()};
     case 'getOfficialDataset': ensurePublished_(); validateDataset_(); return {success:true,dataset:buildDataset_()};
     case 'getHKAnnuityRates': return getHKAnnuityRates_();
+    case 'getHKAnnuityValues': return getHKAnnuityValues_();
     default: throw Error('ACTION_NOT_ALLOWED');
   }
 }
@@ -289,7 +290,7 @@ function json_(v){return ContentService.createTextOutput(JSON.stringify(v)).setM
 function getHKAnnuityRates_() {
   const sheet = spreadsheet_().getSheetByName('香港年金_領取金額及百分比');
   if (!sheet) throw Error('HK_ANNUITY_SHEET_NOT_FOUND');
-  const values = sheet.getDataRange().getValues();
+  const values = sheet.getDataRange().getValues().filter((r,i)=>i===0 || r.slice(0,4).some(v=>v!==''&&v!==null)).map(r=>r.slice(0,4));
   const headers = ['投保年齡', '性別', '每月領取金額（每HK$1,000,000）', '每年領取百分比（%）'];
   if (values.length !== 53 || values[0].length !== 4 ||
       headers.some((header, i) => String(values[0][i]).trim() !== header)) {
@@ -333,4 +334,22 @@ function testHKAnnuityRates() {
       female60?.monthlyPaymentHkd !== 4700) throw Error('HK_ANNUITY_SMOKE_TEST_FAILED');
   Logger.log(JSON.stringify({success:true,count:result.count,male60,female60}));
   return result;
+}
+
+// User-provided screenshot observations, not independently verified quotations.
+function getHKAnnuityValues_() {
+  const sheet=requireSheet_('香港年金_領取金額及百分比');
+  const raw=sheet.getDataRange().getValues(), headers=['投保年齡','性別','基準整付保費HKD','保單年度','年末年齡','官方月收HKD','累積已收HKD','保證現金價值HKD','一筆過身故HKD','價值性質','來源及限制'];
+  if(headers.some((v,i)=>text_(raw[0][i+6])!==v))throw Error('HK_VALUES_SCHEMA_INVALID');
+  const rates=getHKAnnuityRates_().rates, seen=new Set(), observations=[];
+  raw.slice(1).forEach(row=>{if(!row.slice(6,17).some(v=>v!==''&&v!==null&&v!==undefined))return;
+    const [age,genderRaw,premium,year,attained,monthly,cumulative,cash,death,kind,source]=row.slice(6,17);
+    const gender=gender_(genderRaw),key=age+'|'+gender+'|'+year, rate=rates.find(r=>r.issueAge===age&&r.gender===gender);
+    if(![60,65].includes(age)||premium!==1000000||!Number.isInteger(year)||year<1||attained!==age+year||attained>100||!rate||monthly!==rate.monthlyPaymentHkd||cumulative!==monthly*12*year||!Number.isFinite(cash)||cash<0||!Number.isFinite(death)||death<0||!text_(kind)||!text_(source)||seen.has(key))throw Error('HK_VALUES_ROW_INVALID:'+key);
+    const expected=cumulative>=1050000?0:Math.max(cash,1000000-cumulative);
+    if(death!==expected||(cumulative>=1050000&&cash!==0))throw Error('HK_VALUES_RULE_INVALID:'+key);
+    seen.add(key);observations.push({issueAge:age,gender,policyYear:year,cashValueHkd:cash,deathBenefitHkd:death});
+  });
+  for(const age of [60,65])for(const gender of ['M','F'])for(let year=1;year<=100-age;year++)if(!seen.has(age+'|'+gender+'|'+year))throw Error('HK_VALUES_MISSING_ROW');
+  return {success:true,schemaVersion:1,status:'OWNER_SUPPLIED_REFERENCE_NOT_POLICY_QUOTE',observations};
 }
