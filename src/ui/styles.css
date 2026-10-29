@@ -28,11 +28,10 @@
 .annuity-comparison{margin-top:1.5rem;min-width:0}.annuity-comparison summary{cursor:pointer}.annuity-comparison summary span{display:block;color:#536575;font-size:.88rem;margin:.35rem 0}.comparison-products{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem;margin:1rem 0}.comparison-products>div{background:#eff6fb;padding:1rem;border-radius:10px;min-width:0}.comparison-products h3{margin:0 0 .5rem}.comparison-products strong,.comparison-products span{display:block}.comparison-table{overflow-x:auto}.comparison-table table{width:100%;border-collapse:collapse}.comparison-table th,.comparison-table td{padding:.6rem;text-align:left;border-bottom:1px solid #d4e0ea;overflow-wrap:anywhere}@media(max-width:480px){.comparison-products>div{padding:.65rem}.comparison-table th,.comparison-table td{padding:.4rem;font-size:.85rem}}
 
 /* Owner-provided feature illustrations: supportive, not dominant. */
-.feature-reference-image{width:50%;max-width:650px;margin:16px auto 22px;text-align:center;min-width:0}
+.feature-reference-image{width:100%;max-width:100%;margin:16px auto 22px;text-align:center;min-width:0}
 .feature-reference-trigger{display:block;width:100%;border:0;background:transparent;padding:0;cursor:zoom-in}
 .feature-reference-trigger img{display:block;width:100%;height:auto;object-fit:contain;border-radius:10px}
 .feature-image-dialog{border:0;border-radius:14px;padding:14px;max-width:min(96vw,1100px);max-height:94vh;text-align:center;box-shadow:0 18px 60px #0005}
 .feature-image-dialog::backdrop{background:#000b}
 .feature-image-dialog img{max-width:100%;max-height:76vh;object-fit:contain;display:block;margin:0 auto 14px}
-@media(max-width:900px){.feature-reference-image{width:65%}}
-@media(max-width:540px){.feature-reference-image{width:100%}}
+
