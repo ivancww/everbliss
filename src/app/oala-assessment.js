@@ -56,3 +56,21 @@ export function deleteAcrossSeparator(value, caret, direction) {
   const next = value.slice(0, digit) + value.slice(digit + 1);
   return formatAssessmentInput(next, backward ? digit : caret);
 }
+
+// Conditional on the relevant annuity treatment being accepted by SWD.
+export function idealPremiumRange(input) {
+  const assets = parseAssessmentAmount(input.assets), income = parseAssessmentAmount(input.income), funds = parseAssessmentAmount(input.availableFunds), fx = Number(input.fx);
+  if (assets === null || income === null || funds === null || !Number.isFinite(fx) || fx <= 0) return { available:false, reason:'INCOMPLETE' };
+  const limits = input.household === 'couple' ? oalaData.couple : oalaData.single;
+  if (income > limits.incomeLimit) return { available:false, reason:'INCOME' };
+  const floor = Math.ceil(Math.max(0, assets - limits.assetLimit, 25000 * fx));
+  const ceiling = Math.floor(Math.min(assets, funds, 4000000 * fx));
+  if (floor > ceiling) return { available:false, reason: funds < floor || assets < floor ? 'FUNDS' : 'PRODUCT_LIMIT' };
+  const check = premium => assessment({...input, premium});
+  const first = check(floor);
+  if (!first.outcome) return { available:false, reason:'SCENARIO' };
+  if (!first.after.within) return { available:false, reason:'INCOME' };
+  let lo = floor, hi = ceiling;
+  while (lo < hi) { const mid = Math.ceil((lo + hi) / 2); const r = check(mid); if (r.after?.within) lo = mid; else hi = mid - 1; }
+  return { available:true, min:floor, max:lo, suggested:floor, financialMinimum:Math.max(0, assets-limits.assetLimit), conditional:true };
+}
