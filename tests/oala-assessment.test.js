@@ -23,7 +23,7 @@ test('invalid and excessive inputs never fabricate a result',()=>{
  assert.equal(assessment({...base,assets:'',premium:'500000'}).after,null);
 });
 test('official notes and update contract remain explicit',()=>{
- const s=fs.readFileSync('src/app/main.js','utf8');assert.match(s,/function oalaNotes\(\)/);assert.match(s,/<details><summary>\$\{title\}/);assert.doesNotMatch(s,/<details open/);assert.match(s,/最終以社署決定為準/);assert.match(s,/id="oala-years"/);assert.match(s,/updateOalaResults\(\)/);
+ const s=fs.readFileSync('src/app/main.js','utf8');assert.match(s,/function oalaNotes\(\)/);assert.match(s,/<details><summary>\$\{title\}/);assert.doesNotMatch(s,/<details open/);assert.match(s,/最終申請資格及批核結果以社署決定為準/);assert.match(s,/id="oala-years"/);assert.match(s,/updateOalaResults\(\)/);
  assert.match(fs.readFileSync('src/pwa/sw-template.js','utf8'),/oala-assessment\.js/);
 });
 

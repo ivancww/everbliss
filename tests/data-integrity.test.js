@@ -47,7 +47,7 @@ test("feature hub and Return to AVA remain part of the shell",()=>{
 });
 test("OALA page uses conditional rule framing and keeps asset and income results separate",()=>{
   const source=fs.readFileSync(path.join(root,"src/app/main.js"),"utf8");
-  assert.match(source,/本模擬預設 EverBliss 符合社署相關年金資產處理規定/);assert.match(source,/最終以社署決定為準/);assert.match(source,/oala-assumption-note/);
+  assert.match(source,/本模擬預設 EverBliss 符合社署相關年金資產處理規定/);assert.match(source,/最終申請資格及批核結果以社署決定為準/);assert.match(source,/oala-assumption-note/);
   assert.match(source,/可評估資產/);assert.match(source,/可評估入息/);assert.doesNotMatch(source,/政府已確認合資格/);
 });
 test("RetireSmart is identified as non-contractual with verified provider and fee caveats",()=>{
