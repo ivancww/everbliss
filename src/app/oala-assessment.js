@@ -59,7 +59,7 @@ export function deleteAcrossSeparator(value, caret, direction) {
 
 // Conditional on the relevant annuity treatment being accepted by SWD.
 export function idealPremiumRange(input) {
-  const assets = parseAssessmentAmount(input.assets), income = parseAssessmentAmount(input.income), funds = parseAssessmentAmount(input.availableFunds), fx = Number(input.fx);
+  const assets = parseAssessmentAmount(input.assets), income = parseAssessmentAmount(input.income), funds = assets, fx = Number(input.fx);
   if (assets === null || income === null || funds === null || !Number.isFinite(fx) || fx <= 0) return { available:false, reason:'INCOMPLETE' };
   const limits = input.household === 'couple' ? oalaData.couple : oalaData.single;
   if (income > limits.incomeLimit) return { available:false, reason:'INCOME' };
