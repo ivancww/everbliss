@@ -61,7 +61,7 @@ test("result rendering keeps the first guaranteed phase primary and supports con
   assert.doesNotMatch(source,/renderResult=correctedRenderResult/);
 });
 test("release version has one canonical source and matches visible label contract",()=>{
-  const release=JSON.parse(fs.readFileSync(path.join(root,"release.json"),"utf8"));assert.equal(release.version,"v0.4.8");
+  const release=JSON.parse(fs.readFileSync(path.join(root,"release.json"),"utf8"));assert.equal(release.version,"v0.4.9");
   const main=fs.readFileSync(path.join(root,"src/app/main.js"),"utf8");const html=fs.readFileSync(path.join(root,"index.html"),"utf8");const build=fs.readFileSync(path.join(root,"scripts/build.js"),"utf8");
   assert.match(main,/EVERBLISS_RELEASE\?\.version/);assert.match(html,/id="app-version"/);assert.match(html,/__EVERBLISS_VERSION__/);assert.match(build,/build-info\.js/);assert.doesNotMatch(main,/AVA_VERSION\s*=/);
 });
