@@ -44,7 +44,7 @@ test("J02, J03, OALA and J07 presentation contracts remain in the single frontst
   assert.match(source, /updateRetirementGap\(\)/);
   assert.match(source, /data-reserve-unknown/);
   assert.match(source, /id="liquidity-reserve-value"/);
-  assert.match(source, /完成年齡及開始時間的 EverBliss 試算/);
+  assert.match(source, /年齡、性別、入息開始時間或該保單年度資料不適用或未提供/);
   assert.match(source, /proposedPremium/);
   assert.match(source, /data-year/);
   assert.match(source, /data-result-age/);
