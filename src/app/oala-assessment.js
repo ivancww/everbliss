@@ -74,3 +74,9 @@ export function idealPremiumRange(input) {
   while (lo < hi) { const mid = Math.ceil((lo + hi) / 2); const r = check(mid); if (r.after?.within) lo = mid; else hi = mid - 1; }
   return { available:true, min:floor, max:lo, suggested:floor, financialMinimum:Math.max(0, assets-limits.assetLimit), conditional:true };
 }
+
+// A displayed policy year is an illustration choice, not a new premium arrangement.
+export function idealArrangementKey(input) {
+  const { policyYear, ...arrangement } = input;
+  return JSON.stringify(arrangement);
+}
