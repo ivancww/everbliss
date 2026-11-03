@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { idealPremiumRange, assessment } from '../src/app/oala-assessment.js';
+import { idealPremiumRange, idealArrangementKey, assessment } from '../src/app/oala-assessment.js';
 import { calculateOutcome } from '../src/calculations/full-outcomes.js';
 const base={household:'single',assets:600000,income:2000,availableFunds:400000,issueAge:70,gender:'F',mode:'immediate',policyYear:1,fx:7.8};
 test('conditional range uses assets, product minimum, available funds and engine',()=>{const r=idealPremiumRange(base);assert.equal(r.min,195000);assert.equal(r.max,600000);assert.equal(r.financialMinimum,185000);assert.equal(assessment({...base,premium:r.min}).after.within,true);});
@@ -15,3 +15,30 @@ test('withdrawal and death interpolation retains scenario separation',()=>{for(c
 
 test('ideal range uses assessed assets rather than legacy available funds',()=>{const x=idealPremiumRange({...base,availableFunds:0});assert.equal(x.available,true);assert.equal(x.max,600000);});
 test('standalone outcome needs actual scenario and gives conditional financial comparison',()=>{const r=assessment({...base,premium:195000});assert.equal(r.after.assets,405000);assert.ok(r.outcome.monthly>0);assert.equal(r.after.income,2000+r.outcome.monthly);assert.equal(assessment({...base,gender:'invalid',premium:195000}).outcome,null);assert.equal(assessment({...base,mode:'invalid',premium:195000}).outcome,null);});
+
+test('policy year does not invalidate accepted ideal arrangement; selected income recalculates',()=>{
+ const arrangement={...base,assets:1000000,household:'couple',income:1000,issueAge:60,mode:'immediate'};
+ const accepted=500000;
+ const first={...arrangement,policyYear:6};
+ const key=idealArrangementKey(first);
+ for(const year of [6,7,8,9,6]){
+   const input={...arrangement,policyYear:year};
+   assert.equal(idealArrangementKey(input),key);
+   const range=idealPremiumRange(input);
+   assert.equal(range.available,true);
+   assert.ok(accepted>=range.min && accepted<=range.max);
+   const r=assessment({...input,premium:accepted});
+   assert.ok(r.outcome,'Valid year '+year+' retains outcome');
+   assert.equal(r.after.assets,500000);
+   assert.equal(r.after.income,1000+r.outcome.monthly);
+ }
+ assert.notEqual(assessment({...first,premium:accepted}).outcome.monthly,assessment({...first,policyYear:8,premium:accepted}).outcome.monthly);
+});
+test('real arrangement edits invalidate acceptance key; selected year alone does not',()=>{
+ const a={...base,policyYear:6};
+ const key=idealArrangementKey(a);
+ assert.equal(key,idealArrangementKey({...a,policyYear:7}));
+ for(const modified of [{assets:700000},{income:4000},{household:'couple'},{issueAge:75},{mode:'deferred'},{fx:7.9}]){
+   assert.notEqual(key,idealArrangementKey({...a,...modified}));
+ }
+});
